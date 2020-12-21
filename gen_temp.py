@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
+#! /home/een023/.virtualenvs/cesmtest/bin/python
 """Send in a path to .nc files and the name of the files.
 Either as a list of many files or with the asterisk (wildcard?) notation, `"*.nc"`.
 Note that the wildcard notation must be sent in as a string like the above example.
 
 Then creates a summary file for temperature.
-
-https://xarray.pydata.org/en/stable/examples/monthly-means.html
 """
 
 import os
@@ -22,7 +20,6 @@ parser.add_argument('-sp', '--savepath',
 parser.add_argument('-i', '--input', type=str, nargs='+',
                     help='input .nc files. Use quotes around *, e.g. "*.nc".')
 parser.add_argument('-o', '--output', help='output .nc files')
-parser.add_argument('--plot', help='plot the result')
 
 args = parser.parse_args()
 # Correct the input argument
@@ -68,7 +65,8 @@ else:
         print('Exiting...')
         sys.exit()
     else:
-        os.makedirs(savepath, exist_ok=True)
+        if savepath != '':
+            os.makedirs(savepath, exist_ok=True)
         print('Saving to', savepath + output)
 
 dataset = xr.open_mfdataset(inputs)
