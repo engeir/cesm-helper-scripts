@@ -45,6 +45,12 @@ for f in inputs:
     if '*' in f:
         inputs = f
         break
+try:
+    xr.open_mfdataset(inputs)
+except:
+    print(f'I could not find {inputs}')
+    print('Exiting...')
+    sys.exit()
 # Correct the savepath argument
 savepath = args.savepath if args.savepath is not None else ''
 savepath = path if savepath == 'input' else savepath
