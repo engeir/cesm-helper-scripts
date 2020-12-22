@@ -1,4 +1,4 @@
-#! /home/een023/.virtualenvs/cesmtest/bin/python
+#! /cluster/home/een023/.virtualenvs/p3/bin/python 
 """Send in a path to .nc files and the name of the files.
 Either as a list of many files or with the asterisk (wildcard?) notation, `"*.nc"`.
 Note that the wildcard notation must be sent in as a string like the above example.
@@ -6,6 +6,7 @@ Note that the wildcard notation must be sent in as a string like the above examp
 Then creates a summary file for temperature.
 """
 
+import glob
 import os
 import sys
 import datetime
@@ -13,7 +14,7 @@ import argparse
 import xarray as xr
 
 parser = argparse.ArgumentParser(
-    description='Create a record average file (similar to ncra).')
+    description='Create a file containing only the temperature variable.')
 parser.add_argument('-p', '--path', help='path to .nc files')
 parser.add_argument('-sp', '--savepath',
                     help='path to where the .nc file is saved')
@@ -45,9 +46,7 @@ for f in inputs:
     if '*' in f:
         inputs = f
         break
-try:
-    xr.open_mfdataset(inputs)
-except:
+if not glob.glob(inputs):
     print(f'I could not find {inputs}')
     print('Exiting...')
     sys.exit()

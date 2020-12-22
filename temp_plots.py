@@ -1,9 +1,10 @@
-#! /home/een023/.virtualenvs/cesmtest/bin/python
+#! /cluster/home/een023/.virtualenvs/p3/bin/python
 """Send in a path to an .nc file and the name of the file.
 
 Then creates plots of temperature.
 """
 
+import glob
 import os
 import sys
 import datetime
@@ -46,13 +47,7 @@ else:
 # Combine the path with all files
 inputs = f'{path}{args.input}' if args.input.split(
     '.')[-1] == 'nc' else f'{path}{args.input}.nc'
-try:
-    xr.open_dataarray(inputs, decode_times=False)
-except:
-    print(f'I could not find {inputs}')
-    print('Exiting...')
-    sys.exit()
-if not os.path.exists(inputs):
+if not glob.glob(inputs):
     print(f'I could not find {inputs}')
     print('Exiting...')
     sys.exit()
