@@ -34,6 +34,10 @@ args = parser.parse_args()
 # Correct the input argument
 if args.input is None:
     raise ValueError('you must give the input files')
+if args.plots is None:
+    raise ValueError('you must specify what kind of plot you want (simple, sphere, anim)')
+if not set(args.plots).issubset(set(['simple', 'sphere', 'anim'])):
+    raise ValueError('you must choose between: simple, sphere, anim')
 # Correct the output argument
 if args.output is None:
     output = datetime.date.today().strftime("%Y%m%d")
