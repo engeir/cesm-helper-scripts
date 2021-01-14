@@ -15,6 +15,7 @@ import pprint
 import argparse
 from netCDF4 import Dataset
 from rich.console import Console
+
 console=Console(force_terminal=True, color_system="truecolor", width=200)
 
 parser = argparse.ArgumentParser(
