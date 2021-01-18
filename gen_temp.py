@@ -4,6 +4,8 @@ Either as a list of many files or with the asterisk (wildcard?) notation, `"*.nc
 Note that the wildcard notation must be sent in as a string like the above example.
 
 Then creates a summary file for temperature.
+Usage:
+    gen_temp.py -p look/here -i one.nc two.nc -sp input -o output_name
 """
 
 import glob

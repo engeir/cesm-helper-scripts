@@ -1,7 +1,10 @@
 #! /cluster/home/een023/.virtualenvs/p3/bin/python
-"""Send in a path to an .nc file and the name of the file.
+"""Send in a path to a .nc file and the name of the file.
 
 Then creates plots of temperature.
+
+Usage:
+    temp_plots -i single_file.nc -p up/three/layers -sp save_two_layers_below_input -o output_name -plt simpel sphere anim
 """
 
 import glob
@@ -21,14 +24,14 @@ parser = argparse.ArgumentParser(
         (1) simpel: Temperature vs time \
         (2) sphere: Temperature vs (lat vs lon) at time `t` \
         (3) anim:   Temperature vs (lat vs lon) animation.')
-parser.add_argument('-p', '--path', help='path to .nc file')
+parser.add_argument('-p', '--path', help='Relative path to .nc file. If not given, the current directory is used.')
 parser.add_argument('-sp', '--savepath',
-                    help='path to where the plot files are saved')
+                    help='relative path to where the plot files are saved. If the savepath is -sp input, the same path is used here as is for the path parameter. If not given, the current directory is used.')
 parser.add_argument('-i', '--input', type=str,
-                    help='input .nc files')
-parser.add_argument('-o', '--output', help='output files')
+                    help='Input .nc file.')
+parser.add_argument('-o', '--output', help='Name of the output files.')
 parser.add_argument('-plt', '--plots', type=str, nargs='+',
-                    help='list of the plots that should be generated')
+                    help='List of the plots that should be generated.')
 
 args = parser.parse_args()
 # Correct the input argument
