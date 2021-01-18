@@ -14,6 +14,7 @@ import sys
 import datetime
 import argparse
 import xarray as xr
+import numpy as np
 
 parser = argparse.ArgumentParser(
     description='Create a file containing only the temperature variable.')
@@ -23,6 +24,7 @@ parser.add_argument('-sp', '--savepath',
 parser.add_argument('-i', '--input', type=str, nargs='+',
                     help='input .nc files. Use quotes around *, e.g. "*.nc".')
 parser.add_argument('-o', '--output', help='output .nc files')
+parser.add_argument('-y', '--year', action='store_true', help='Compute a 12 month running average.')
 
 args = parser.parse_args()
 # Correct the input argument
@@ -79,4 +81,8 @@ else:
 dataset = xr.open_mfdataset(inputs)
 dataset = xr.decode_cf(dataset)
 ds = dataset.T
+if args.year:
+    ds = ds.chunk({'time': 12})
+    r = ds.rolling(time=12)
+    ds = r.mean()
 ds.to_netcdf(savepath + output)
