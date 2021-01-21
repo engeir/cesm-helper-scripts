@@ -13,6 +13,7 @@ import sys
 import datetime
 import argparse
 import xarray as xr
+import nc_time_axis
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import cartopy.crs as ccrs
@@ -152,7 +153,7 @@ def just_temp(temps):
 # === </CODE> ===
 
 
-multi_T = xr.open_dataarray(inputs, decode_times=False)
+multi_T = xr.open_dataarray(inputs)
 multi_T = multi_T.isel(lev=0)
 if 'simple' in args.plots:
     just_temp(multi_T)
