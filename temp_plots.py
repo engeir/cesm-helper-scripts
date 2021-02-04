@@ -13,6 +13,7 @@ import sys
 import datetime
 import argparse
 import xarray as xr
+import numpy as np
 import nc_time_axis
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -146,8 +147,15 @@ def temperature_animation(time_temp):
 
 
 def just_temp(temps):
-    k = temps.mean(dim=['lat', 'lon'])
-    k.plot()
+    # Compensate for the different width of grid cells at different latitudes.
+    # Need mean = ( sum n*cos(lat) ) / ( sum cos(lat) )
+    weights = np.cos(np.deg2rad(temps.lat))
+    weights.name = 'weights'
+    print(weights)
+    air_weighted = temps.weighted(weights)
+    k_w = air_weighted.mean(('lon', 'lat'))
+    # k = temps.mean(dim=['lat', 'lon'])
+    k_w.plot()
     plt.savefig(f'{savepath}{output}_temp.png')
     plt.close()
 # === </CODE> ===
