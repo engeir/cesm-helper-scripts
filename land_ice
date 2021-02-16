@@ -97,10 +97,8 @@ def ice_volume(ice):
     # Scale to compensate for the grid.
     weights = np.cos(np.deg2rad(ice.lat))
     weights.name = 'weights'
-    print(ice.sum(('lat', 'lon')))
     ice_weighted = ice.weighted(weights)
     volume = ice_weighted.sum(('lon', 'lat'))
-    print(volume)
 
 # === </CODE> ===
 
