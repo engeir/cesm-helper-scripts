@@ -148,7 +148,9 @@ def temperature_animation(time_temp):
 
 def just_temp(temps):
     # Compensate for the different width of grid cells at different latitudes.
+    # https://xarray.pydata.org/en/stable/examples/area_weighted_temperature.html
     # Need mean = ( sum n*cos(lat) ) / ( sum cos(lat) )
+    print(temps.lat)
     weights = np.cos(np.deg2rad(temps.lat))
     weights.name = 'weights'
     print(weights)
