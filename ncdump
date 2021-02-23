@@ -16,14 +16,18 @@ import argparse
 from netCDF4 import Dataset
 from rich.console import Console
 
-console=Console(force_terminal=True, color_system="truecolor", width=200)
-
 parser = argparse.ArgumentParser(
         description='Print data from a .nc file')
 parser.add_argument('-i', '--input', type=str, help='file name')
-parser.add_argument('-l', '--long', action='store_true')
+parser.add_argument('-l', '--long', action='store_true', help='print all obtainable info from the .nc file')
+parser.add_argument('-f', '--format', action='store_true', help='print in unformatted text, better when the output is stored and viewed in en editor')
 
 args = parser.parse_args()
+if not args.format:
+    console=Console(force_terminal=True, color_system="truecolor", width=200)
+else:
+    console=Console(width=200)
+print = console.print
 
 def ncdump(nc_fid, verb=True):
     '''
@@ -57,59 +61,59 @@ def ncdump(nc_fid, verb=True):
             a valid netCDF4.Dataset.variables key
         """
         try:
-            console.print("\t\t[italic white]type:[/italic white]", repr(nc_fid.variables[key].dtype))
+            print("\t\t[italic white]type:[/italic white]", repr(nc_fid.variables[key].dtype))
             for ncattr in nc_fid.variables[key].ncattrs():
-                console.print('\t\t[italic white]%s:[/italic white]' % ncattr, repr(
+                print('\t\t[italic white]%s:[/italic white]' % ncattr, repr(
                     nc_fid.variables[key].getncattr(ncattr)))
         except KeyError:
-            console.print("\t\t[italic white]WARNING: [/italic white][red]%s[/red] does not contain variable attributes" % key)
+            print("\t\t[italic white]WARNING: [/italic white][red]%s[/red] does not contain variable attributes" % key)
 
     # NetCDF global attributes
     nc_attrs = nc_fid.ncattrs()
     if verb:
-        console.print("[bold white]NetCDF Global Attributes:[/bold white]")
+        print("[bold white]NetCDF Global Attributes:[/bold white]")
         for nc_attr in nc_attrs:
             try:
                 if repr(nc_fid.getncattr(nc_attr)[0]) != repr('\n'):
-                    console.print('\t[italic white]%s:[/italic white]' % nc_attr, textwrap.fill(str(nc_fid.getncattr(nc_attr)), subsequent_indent='\t\t', break_long_words=False, break_on_hyphens=False))
+                    print('\t[italic white]%s:[/italic white]' % nc_attr, textwrap.fill(str(nc_fid.getncattr(nc_attr)), subsequent_indent='\t\t', break_long_words=False, break_on_hyphens=False))
                 else:
-                    console.print('\t[italic white]%s:[/italic white]' % nc_attr, textwrap.indent(str(nc_fid.getncattr(nc_attr)), '\t\t'))
+                    print('\t[italic white]%s:[/italic white]' % nc_attr, textwrap.indent(str(nc_fid.getncattr(nc_attr)), '\t\t'))
             except:
                 pass
     nc_dims = [dim for dim in nc_fid.dimensions]  # list of nc dimensions
 
     # Dimension shape information.
     if verb:
-        console.print("[bold white]NetCDF dimension information:[/bold white]")
+        print("[bold white]NetCDF dimension information:[/bold white]")
         for dim in nc_dims:
-            console.print("\t[italic white]Name:[/italic white]", dim)
-            console.print("\t\t[italic white]size:[/italic white]", len(nc_fid.dimensions[dim]))
+            print("\t[italic white]Name:[/italic white]", dim)
+            print("\t\t[italic white]size:[/italic white]", len(nc_fid.dimensions[dim]))
             print_ncattr(dim)
 
     # Variable information.
     nc_vars = [var for var in nc_fid.variables]  # list of nc variables
     if verb:
-        console.print("[bold white]NetCDF variable information:[/bold white]")
+        print("[bold white]NetCDF variable information:[/bold white]")
         if args.long:
             for var in nc_vars:
                 if var not in nc_dims:
-                    console.print('\t[italic white]Name:[/italic white]', var)
-                    console.print("\t\t[italic white]dimensions:[/italic white]", repr(nc_fid.variables[var].dimensions))
-                    console.print("\t\t[italic white]size:[/italic white]", nc_fid.variables[var].size)
+                    print('\t[italic white]Name:[/italic white]', var)
+                    print("\t\t[italic white]dimensions:[/italic white]", repr(nc_fid.variables[var].dimensions))
+                    print("\t\t[italic white]size:[/italic white]", nc_fid.variables[var].size)
                     print_ncattr(var)
         else: 
             if len(nc_vars) > 20:
-                console.print("\t[italic white]Number of variables: [/italic white]", len(nc_vars))
-                console.print("\t[italic white]Variables list: [/italic white]")  # , '\n', nc_vars)
+                print("\t[italic white]Number of variables: [/italic white]", len(nc_vars))
+                print("\t[italic white]Variables list: [/italic white]")  # , '\n', nc_vars)
                 pp = pprint.PrettyPrinter(width=80, compact=True)
-                console.print(textwrap.indent(pp.pformat(nc_vars), '\t\t'))
+                print(textwrap.indent(pp.pformat(nc_vars), '\t\t'))
                 # pprint.pprint(nc_vars)
             else:
                 for var in nc_vars:
                     if var not in nc_dims:
-                        console.print('\t[italic white]Name:[/italic white]', var)
-                        console.print("\t\t[italic white]dimensions:[/italic white]", repr(nc_fid.variables[var].dimensions))
-                        console.print("\t\t[italic white]size:[/italic white]", nc_fid.variables[var].size)
+                        print('\t[italic white]Name:[/italic white]', var)
+                        print("\t\t[italic white]dimensions:[/italic white]", repr(nc_fid.variables[var].dimensions))
+                        print("\t\t[italic white]size:[/italic white]", nc_fid.variables[var].size)
                         print_ncattr(var)
     return nc_attrs, nc_dims, nc_vars
 
