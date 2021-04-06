@@ -13,6 +13,7 @@ import datetime
 import glob
 import os
 import sys
+from typing import Union
 
 import xarray as xr
 
@@ -57,20 +58,21 @@ inputs = [
     for file in args.input
 ]
 # If an asterisk (*) is used, all other files are discarded
+the_input: Union[str, list[str]]
 if any("*" in f for f in inputs):
     val = inputs[[i for i, s in enumerate(inputs) if "*" in s][0]]
-    the_input = [val]
-    # if not glob.glob(the_input):
-    #     print(f"I could not find {the_input}")
-    #     print("Exiting...")
-    #     sys.exit()
-else:
-    the_input = inputs
-for input_ in the_input:
-    if not glob.glob(input_):
-        print(f"I could not find {input_}")
+    the_input = val
+    if not glob.glob(the_input):
+        print(f"I could not find {the_input}")
         print("Exiting...")
         sys.exit()
+else:
+    the_input = inputs
+    for input_ in the_input:
+        if not glob.glob(input_):
+            print(f"I could not find {input_}")
+            print("Exiting...")
+            sys.exit()
 # Correct the savepath argument
 savepath = args.savepath if args.savepath is not None else ""
 savepath = path if savepath == "input" else savepath
