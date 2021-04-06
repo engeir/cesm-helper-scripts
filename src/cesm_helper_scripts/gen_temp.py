@@ -61,7 +61,7 @@ inputs = [
 the_input: Union[str, list[str]]
 if any("*" in f for f in inputs):
     val = inputs[[i for i, s in enumerate(inputs) if "*" in s][0]]
-    the_input = val
+    the_input = str(val)
     if not glob.glob(the_input):
         print(f"I could not find {the_input}")
         print("Exiting...")
