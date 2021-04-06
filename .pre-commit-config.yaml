@@ -45,7 +45,7 @@ repos:
     name: pyupgrade
     stages: [commit]
     language: system
-    entry: poetry run pyupgrade src
+    entry: poetry run pyupgrade
     types: [python]
     require_serial: true
 
