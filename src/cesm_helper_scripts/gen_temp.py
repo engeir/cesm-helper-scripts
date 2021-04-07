@@ -106,7 +106,6 @@ dataset = xr.open_mfdataset(the_input)
 dataset = xr.decode_cf(dataset)
 ds = dataset.T
 if args.year:
-    print("Yearly")
     ds = ds.chunk({"time": 12})
     r = ds.rolling(time=12)
     ds = r.mean()
