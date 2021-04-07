@@ -31,7 +31,10 @@ parser.add_argument(
 )
 parser.add_argument("-o", "--output", help="output .nc files")
 parser.add_argument(
-    "-y", "--year", action="store_true", help="Compute a 12 month running average."
+    "-y",
+    "--year",
+    action="store_true",
+    help="If given, a 12 month running average is computed.",
 )
 
 args = parser.parse_args()
