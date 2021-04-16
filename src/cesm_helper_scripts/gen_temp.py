@@ -104,7 +104,8 @@ else:
 
 dataset = xr.open_mfdataset(the_input)
 dataset = xr.decode_cf(dataset)
-ds = dataset.T
+ds = dataset.TREFHT  # This is probably the correct one, reference height temperature
+# ds = dataset.T
 if args.year:
     ds = ds.chunk({"time": 12})
     r = ds.rolling(time=12)
