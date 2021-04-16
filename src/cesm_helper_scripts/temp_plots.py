@@ -194,7 +194,7 @@ def just_temp(temps):
 
 
 multi_T = xr.open_dataarray(inputs)
-multi_T = multi_T.isel(lev=0)
+# multi_T = multi_T.isel(lev=0)
 if "simple" in args.plots:
     just_temp(multi_T)
 if "sphere" in args.plots:
