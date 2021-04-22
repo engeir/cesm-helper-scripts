@@ -1,6 +1,7 @@
-#! ~/.pyenv/shims/python
+#!/cluster/home/een023/.pyenv/versions/cesm/bin/python
 
-#! /home/een023/.virtualenvs/cesmtest/bin/python
+# !/home/een023/.pyenv/versions/cesm/bin/python
+# ! /home/een023/.virtualenvs/cesmtest/bin/python
 
 """Formatted output of a .nc file.
 
@@ -111,7 +112,7 @@ def ncdump(nc_fid, verb=True):
                         "\t[italic white]%s:[/italic white]" % nc_attr,
                         textwrap.indent(str(nc_fid.getncattr(nc_attr)), "\t\t"),
                     )
-            except:
+            except Exception:
                 pass
     nc_dims = [dim for dim in nc_fid.dimensions]  # list of nc dimensions
 

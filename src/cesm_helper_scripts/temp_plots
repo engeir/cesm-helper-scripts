@@ -1,4 +1,4 @@
-#! ~/.pyenv/shims/python
+#!/cluster/home/een023/.pyenv/versions/cesm/bin/python
 
 #! /cluster/home/een023/.virtualenvs/p3/bin/python
 """Send in a path to a .nc file and the name of the file.
