@@ -1,3 +1,4 @@
+#! ~/.
 #! /cluster/home/een023/.virtualenvs/p3/bin/python
 """Send in a path to .nc files and the name of the files.
 Either as a list of many files or with the asterisk (wildcard?) notation, `"*.nc"`.
