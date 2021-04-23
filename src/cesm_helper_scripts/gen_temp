@@ -83,25 +83,27 @@ savepath = path if savepath == "input" else savepath
 savepath = savepath + "/" if savepath != "" and savepath[-1] != "/" else savepath
 # Check if output file exist
 if os.path.exists(savepath + output):
-    ans = str(
-        input(
-            f'The file {output} already exist in {savepath[:-1] if savepath != "" else "this directory"}. Do you want to overwrite this? (y/n)\t'
-        )
-    )
-    if ans != "y":
-        print("Exiting...")
-        sys.exit()
-    else:
-        print("Saving to", savepath + output)
+    print(f"A file with the name {output} already exist. Exiting...")
+    sys.exit()
+    # ans = str(
+    #     input(
+    #         f'The file {output} already exist in {savepath[:-1] if savepath != "" else "this directory"}. Do you want to overwrite this? (y/n)\t'
+    #     )
+    # )
+    # if ans != "y":
+    #     print("Exiting...")
+    #     sys.exit()
+    # else:
+    #     print("Saving to", savepath + output)
 else:
-    ans = str(input(f"Save to {savepath}{output}? (y/n)\t"))
-    if ans != "y":
-        print("Exiting...")
-        sys.exit()
-    else:
-        if savepath != "":
-            os.makedirs(savepath, exist_ok=True)
-        print("Saving to", savepath + output)
+    # ans = str(input(f"Save to {savepath}{output}? (y/n)\t"))
+    # if ans != "y":
+    #     print("Exiting...")
+    #     sys.exit()
+    # else:
+    if savepath != "":
+        os.makedirs(savepath, exist_ok=True)
+    print("Saving to", savepath + output)
 
 dataset = xr.open_mfdataset(the_input)
 dataset = xr.decode_cf(dataset)
