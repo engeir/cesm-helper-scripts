@@ -1,4 +1,4 @@
-#!/cluster/home/een023/.virtualenvs/cesmtest/bin/python
+#!/cluster/home/een023/.virtualenvs/p3/bin/python
 
 """Formatted output of a .nc file.
 
