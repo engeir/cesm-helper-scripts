@@ -29,14 +29,6 @@ colorama = ["colorama (>=0.4.3)"]
 d = ["aiohttp (>=3.3.2)", "aiohttp-cors"]
 
 [[package]]
-name = "bz2file"
-version = "0.98"
-description = "Read and write bzip2-compressed files."
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "cartopy"
 version = "0.18.0"
 description = "A cartographic python library with Matplotlib support for visualisation"
@@ -638,8 +630,8 @@ viz = ["matplotlib", "seaborn", "nc-time-axis"]
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.9"
-content-hash = "05ec4bb05b20336d91c1091cf45dc1785d68593d7f2d2cb7b9157f92a1bbe96b"
+python-versions = "=3.8.2"
+content-hash = "114a50fd7d08c8b8a809f313d9d9a5a15ef17b8f9945c98d095f8a3672450bb0"
 
 [metadata.files]
 appdirs = [
@@ -648,9 +640,6 @@ appdirs = [
 ]
 black = [
     {file = "black-20.8b1.tar.gz", hash = "sha256:1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea"},
-]
-bz2file = [
-    {file = "bz2file-0.98.tar.gz", hash = "sha256:64c1f811e31556ba9931953c8ec7b397488726c63e09a4c67004f43bdd28da88"},
 ]
 cartopy = [
     {file = "Cartopy-0.18.0.tar.gz", hash = "sha256:7ffa317e8f8011e0d965a3ef1179e57a049f77019867ed677d49dcc5c0744434"},
