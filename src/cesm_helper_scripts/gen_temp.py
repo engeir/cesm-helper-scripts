@@ -1,8 +1,3 @@
-#!/cluster/home/een023/.pyenv/versions/cesm/bin/python
-
-# !/home/een023/.pyenv/versions/cesm/bin/python
-
-# ! /cluster/home/een023/.virtualenvs/p3/bin/python
 """Send in a path to .nc files and the name of the files.
 Either as a list of many files or with the asterisk (wildcard?) notation, `"*.nc"`.
 Note that the wildcard notation must be sent in as a string like the above example.
@@ -17,9 +12,11 @@ import datetime
 import glob
 import os
 import sys
-from typing import List, Union
+from typing import Union
 
 import xarray as xr
+
+# !/cluster/home/een023/.virtualenvs/p3/bin/python
 
 parser = argparse.ArgumentParser(
     description="Create a file containing only the temperature variable."
@@ -65,7 +62,7 @@ inputs = [
     for file in args.input
 ]
 # If an asterisk (*) is used, all other files are discarded
-the_input: Union[str, List[str]]
+the_input: Union[str, list[str]]
 if any("*" in f for f in inputs):
     val = inputs[[i for i, s in enumerate(inputs) if "*" in s][0]]
     the_input = str(val)
