@@ -5,6 +5,10 @@ description = ""
 authors = ["engeir <eirroleng@gmail.com>"]
 license = "MIT"
 
+[tool.poetry.scripts]
+tp = "cesm_helper_scripts.temp_plots:main"
+nc2np = "cesm_helper_scripts.temp_nc_to_np:main"
+
 [tool.poetry.dependencies]
 python = "=3.8.2"
 rich = "^10.1.0"

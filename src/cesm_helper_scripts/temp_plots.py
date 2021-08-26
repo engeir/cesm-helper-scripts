@@ -1,8 +1,8 @@
 #!/cluster/home/een023/.virtualenvs/p3/bin/python
 
-"""Send in a path to a .nc file and the name of the file.
+"""Create plots of temperature data.
 
-Then creates plots of temperature.
+Send in a path to a .nc file and the name of the file. Then creates plots of temperature.
 
 Usage:
     temp_plots -i single_file.nc -p up/three/layers -sp save_two_layers_below_input -o output_name -plt simpel sphere anim
@@ -186,19 +186,39 @@ def just_temp(temps):
     air_weighted = temps.weighted(weights)
     k_w = air_weighted.mean(("lon", "lat"))
     # k = temps.mean(dim=['lat', 'lon'])
+    # try:
+    #     k_w.plot()
+    #     # plt.savefig(f"{savepath}{output}_temp.png")
+    #     plt.show()
+    #     print(1)
+    # except:
+    #     t_ = k_w.indexes["time"]
+    #     t = []
+    #     for d in t_:
+    #         t.append(float(str(d)[:10].replace("-", "")))
+    #     T = list(k_w.data)
+    #     plt.plot(t, T)
+    #     plt.savefig(f"{savepath}{output}_temp.png")
+    #     print(2)
+    # finally:
+    #     plt.close()
+    #     print(3)
     k_w.plot()
     plt.savefig(f"{savepath}{output}_temp.png")
     plt.close()
 
 
 # === </CODE> ===
+def main():
+    multi_T = xr.open_dataarray(inputs)
+    # multi_T = multi_T.isel(lev=0)
+    if "simple" in args.plots:
+        just_temp(multi_T)
+    if "sphere" in args.plots:
+        spherical_plot(multi_T)
+    if "anim" in args.plots:
+        temperature_animation(multi_T)
 
 
-multi_T = xr.open_dataarray(inputs)
-# multi_T = multi_T.isel(lev=0)
-if "simple" in args.plots:
-    just_temp(multi_T)
-if "sphere" in args.plots:
-    spherical_plot(multi_T)
-if "anim" in args.plots:
-    temperature_animation(multi_T)
+if __name__ == "__main__":
+    main()

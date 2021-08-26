@@ -5,6 +5,3 @@ git:
 
 install:
 	cp src/cesm_helper_scripts/gen_temp ~/.local/bin/ && chmod +x ~/.local/bin/gen_temp
-	cp src/cesm_helper_scripts/myncdump ~/.local/bin/ && chmod +x ~/.local/bin/myncdump
-	cp src/cesm_helper_scripts/temp_plots ~/.local/bin/ && chmod +x ~/.local/bin/temp_plots
-	cp src/cesm_helper_scripts/temp_nc_to_np ~/.local/bin/ && chmod +x ~/.local/bin/temp_nc_to_np

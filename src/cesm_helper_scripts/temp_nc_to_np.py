@@ -108,5 +108,10 @@ def nc_to_np(temps):
     np.savez(f"{savepath}{output}.npz", temp=T, times=t)
 
 
-temp_array = xr.open_dataarray(inputs)
-nc_to_np(temp_array)
+def main():
+    temp_array = xr.open_dataarray(inputs)
+    nc_to_np(temp_array)
+
+
+if __name__ == "__main__":
+    main()
