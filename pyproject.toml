@@ -10,7 +10,7 @@ tp = "cesm_helper_scripts.temp_plots:main"
 nc2np = "cesm_helper_scripts.temp_nc_to_np:main"
 
 [tool.poetry.dependencies]
-python = "=3.8.2"
+python = ">3.7.1,<4.0"
 rich = "^10.1.0"
 matplotlib = "^3.4.1"
 numpy = "^1.20.2"
