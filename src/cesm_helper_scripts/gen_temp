@@ -1,12 +1,14 @@
 #!/cluster/home/een023/.virtualenvs/p3/bin/python
 
-"""Send in a path to .nc files and the name of the files.
-Either as a list of many files or with the asterisk (wildcard?) notation, `"*.nc"`.
-Note that the wildcard notation must be sent in as a string like the above example.
+"""Generate aggregated netCDF files.
 
-Then creates a summary file for temperature.
+Send in a path to .nc files and the name of the files. Either as a list of many files or
+with the asterisk (wildcard) notation, `"*.nc"`. Note that when using the wildcard
+notation the string must be wrapped in quotation marks like in the above example.
+
+Then creates a summary file for temperature or any valid attribute.
 Usage:
-    gen_temp.py -p look/here -i one.nc two.nc -sp input -o output_name
+    gen_temp -p look/here -i one.nc two.nc -sp input -o output_name -y -a ATTR
 """
 
 import argparse
