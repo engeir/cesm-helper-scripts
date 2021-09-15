@@ -19,10 +19,17 @@ from typing import List, Union
 import xarray as xr
 
 parser = argparse.ArgumentParser(
-    description="Create a file containing only the temperature variable."
+    description="Create a file containing only the temperature variable.",
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
-parser.add_argument("-p", "--path", help="path to .nc files")
-parser.add_argument("-sp", "--savepath", help="path to where the .nc file is saved")
+parser.add_argument("-p", "--path", type=str, default=".", help="path to .nc files")
+parser.add_argument(
+    "-sp",
+    "--savepath",
+    type=str,
+    default="input",
+    help="path to where the .nc file is saved",
+)
 parser.add_argument(
     "-i",
     "--input",
@@ -37,6 +44,13 @@ parser.add_argument(
     action="store_true",
     help="If given, a 12 month running average is computed.",
 )
+parser.add_argument(
+    "-a",
+    "--attribute",
+    type=str,
+    default="TREFHT",
+    help="attribute of netCDF file",
+)
 
 args = parser.parse_args()
 # Correct the input argument
@@ -49,6 +63,7 @@ else:
     output = args.output
 if output.split(".")[-1] != "nc":
     output += ".nc"
+output = args.attribute + output
 # Correct the path argument
 if args.path is not None:
     path = args.path + "/" if args.path[-1] != "/" else args.path
@@ -91,7 +106,8 @@ else:
 
 dataset = xr.open_mfdataset(the_input)
 dataset = xr.decode_cf(dataset)
-ds = dataset.TREFHT  # This is probably the correct one, reference height temperature
+# ds = dataset.TREFHT  # This is probably the correct one, reference height temperature
+ds = getattr(dataset, args.attribute)
 if args.year:
     ds = ds.chunk({"time": 12})
     r = ds.rolling(time=12)
