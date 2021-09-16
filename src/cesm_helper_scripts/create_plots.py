@@ -1,11 +1,12 @@
 #!/cluster/home/een023/.virtualenvs/p3/bin/python
 
-"""Create plots of temperature data.
+"""Create plots of attribute data.
 
-Send in a path to a .nc file and the name of the file. Then creates plots of temperature.
+Send in a path to a .nc file and the name of the file. Then creates plots of the attribute
+found in the file.
 
 Usage:
-    temp_plots -i single_file.nc -p up/three/layers -sp save_two_layers_below_input -o output_name -plt simpel sphere anim
+    temp_plots -i single_file.nc -p up/three/layers -sp save_two_layers_below_input -o output_name -plt simple sphere anim
 """
 
 import argparse
@@ -24,19 +25,26 @@ import xarray as xr
 parser = argparse.ArgumentParser(
     description="Create plots and animations wrt. temperature from a .nc file. \
         Any number of plots can be generated: \
-        (1) simpel: Temperature vs time \
-        (2) sphere: Temperature vs (lat vs lon) at time `t` \
-        (3) anim:   Temperature vs (lat vs lon) animation."
+        (1) simple: Attribute vs time \
+        (2) sphere: Attribute vs (lat vs lon) at time `t` \
+        (3) anim:   Attribute vs (lat vs lon) animation.",
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument(
     "-p",
     "--path",
+    default=".",
+    type=str,
     help="Relative path to .nc file. If not given, the current directory is used.",
 )
 parser.add_argument(
     "-sp",
     "--savepath",
-    help="relative path to where the plot files are saved. If the savepath is -sp input, the same path is used here as is for the path parameter. If not given, the current directory is used.",
+    default="input",
+    type=str,
+    help="Relative path to where the plot files are saved. If the savepath is -sp "
+    + "input, the same path is used here as is for the path parameter. "
+    + "If not given, the current directory is used.",
 )
 parser.add_argument("-i", "--input", type=str, help="Input .nc file.")
 parser.add_argument("-o", "--output", help="Name of the output files.")
@@ -90,7 +98,9 @@ def file_exist(end):
     if os.path.exists(savepath + output + end):
         ans = str(
             input(
-                f'The file {output}{end} already exist in {savepath[:-1] if savepath != "" else "this directory"}. Do you want to overwrite this? (y/n)\t'
+                f"The file {output}{end} already exist in "
+                + f'{savepath[:-1] if savepath != "" else "this directory"}. '
+                + "Do you want to overwrite this? (y/n)\t"
             )
         )
         if ans != "y":
@@ -110,7 +120,7 @@ def file_exist(end):
 
 
 if "simple" in args.plots:
-    file_exist("_temp.png")
+    file_exist("_simple.png")
 if "sphere" in args.plots:
     file_exist("_sphere.png")
 if "anim" in args.plots:
@@ -132,7 +142,7 @@ def spherical_plot(time_temp):
     plt.close()
 
 
-def temperature_animation(time_temp):
+def anim(signal):
     def make_figure():
         fig = plt.figure(figsize=(8, 3))
         ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
@@ -145,7 +155,7 @@ def temperature_animation(time_temp):
         return fig, ax
 
     def draw(frame, add_colorbar):
-        grid = time_temp[frame]
+        grid = signal[frame]
         contour = grid.plot(
             ax=ax,
             transform=ccrs.PlateCarree(),
@@ -166,9 +176,9 @@ def temperature_animation(time_temp):
 
     fig, ax = make_figure()
 
-    frames = time_temp.time.size  # Number of frames
-    min_value = time_temp.values.min()  # Lowest value
-    max_value = time_temp.values.max()  # Highest value
+    frames = signal.time.size  # Number of frames
+    min_value = signal.values.min()  # Lowest value
+    max_value = signal.values.max()  # Highest value
 
     ani = animation.FuncAnimation(
         fig, animate, frames, interval=0.01, blit=False, init_func=init, repeat=False
@@ -177,13 +187,13 @@ def temperature_animation(time_temp):
     plt.close(fig)
 
 
-def just_temp(temps):
+def attr_vs_time(sigmal):
     # Compensate for the different width of grid cells at different latitudes.
     # https://xarray.pydata.org/en/stable/examples/area_weighted_temperature.html
     # Need mean = ( sum n*cos(lat) ) / ( sum cos(lat) )
-    weights = np.cos(np.deg2rad(temps.lat))
+    weights = np.cos(np.deg2rad(sigmal.lat))
     weights.name = "weights"
-    air_weighted = temps.weighted(weights)
+    air_weighted = sigmal.weighted(weights)
     k_w = air_weighted.mean(("lon", "lat"))
     # k = temps.mean(dim=['lat', 'lon'])
     # try:
@@ -204,20 +214,20 @@ def just_temp(temps):
     #     plt.close()
     #     print(3)
     k_w.plot()
-    plt.savefig(f"{savepath}{output}_temp.png")
+    plt.savefig(f"{savepath}{output}_simple.png")
     plt.close()
 
 
 # === </CODE> ===
 def main():
-    multi_T = xr.open_dataarray(inputs)
+    multi = xr.open_dataarray(inputs)
     # multi_T = multi_T.isel(lev=0)
     if "simple" in args.plots:
-        just_temp(multi_T)
+        attr_vs_time(multi)
     if "sphere" in args.plots:
-        spherical_plot(multi_T)
+        spherical_plot(multi)
     if "anim" in args.plots:
-        temperature_animation(multi_T)
+        anim(multi)
 
 
 if __name__ == "__main__":
