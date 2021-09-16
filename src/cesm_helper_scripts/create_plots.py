@@ -23,7 +23,7 @@ import numpy as np
 import xarray as xr
 
 parser = argparse.ArgumentParser(
-    description="Create plots and animations wrt. temperature from a .nc file. \
+    description="Create plots and animations wrt. the attribute of a .nc file. \
         Any number of plots can be generated: \
         (1) simple: Attribute vs time \
         (2) sphere: Attribute vs (lat vs lon) at time `t` \
