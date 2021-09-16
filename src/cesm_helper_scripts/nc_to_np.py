@@ -1,8 +1,6 @@
-#!/cluster/home/een023/.virtualenvs/p3/bin/python
-
 """Send in a path to a .nc file and the name of the file.
 
-Then creates a numpy array of temperature as a function of time, and saves to a
+Then creates a numpy array of the attribute as a function of time, and saves to a
 npz-file.
 
 Usage:
@@ -19,17 +17,23 @@ import numpy as np
 import xarray as xr
 
 parser = argparse.ArgumentParser(
-    description="Create a numpy array of temperature from a .nc file."
+    description="Create a numpy array of the attribute from a .nc file."
 )
 parser.add_argument(
     "-p",
     "--path",
+    default=".",
+    type=str,
     help="Relative path to .nc file. If not given, the current directory is used.",
 )
 parser.add_argument(
     "-sp",
     "--savepath",
-    help="Relative path to where the file is saved. If the savepath is -sp input, the same path is used here as is for the path parameter. If not given, the current directory is used.",
+    default="input",
+    type=str,
+    help="Relative path to where the file is saved. If the savepath is -sp input, "
+    + "the same path is used here as is for the path parameter. "
+    + "If not given, the current directory is used.",
 )
 parser.add_argument("-i", "--input", type=str, help="Input .nc file.")
 parser.add_argument("-o", "--output", help="Name of the output files.")
@@ -70,7 +74,9 @@ def file_exist(end):
     if os.path.exists(savepath + output + end):
         ans = str(
             input(
-                f'The file {output}{end} already exist in {savepath[:-1] if savepath != "" else "this directory"}. Do you want to overwrite this? (y/n)\t'
+                f"The file {output}{end} already exist in "
+                + '{savepath[:-1] if savepath != "" else "this directory"}. '
+                + "Do you want to overwrite this? (y/n)\t"
             )
         )
         if ans != "y":
@@ -105,12 +111,12 @@ def nc_to_np(temps):
     # k = temps.mean(dim=['lat', 'lon'])
     t = k_w.indexes["time"].to_datetimeindex()
     T = k_w.data
-    np.savez(f"{savepath}{output}.npz", temp=T, times=t)
+    np.savez(f"{savepath}{output}.npz", data=T, times=t)
 
 
 def main():
-    temp_array = xr.open_dataarray(inputs)
-    nc_to_np(temp_array)
+    array = xr.open_dataarray(inputs)
+    nc_to_np(array)
 
 
 if __name__ == "__main__":

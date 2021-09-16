@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "cesm-helper-scripts"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 authors = ["engeir <eirroleng@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.scripts]
-tp = "cesm_helper_scripts.temp_plots:main"
-nc2np = "cesm_helper_scripts.temp_nc_to_np:main"
+cplt = "cesm_helper_scripts.create_plots:main"
+nc2np = "cesm_helper_scripts.nc_to_np:main"
 
 [tool.poetry.dependencies]
 python = ">3.7.1,<3.10"

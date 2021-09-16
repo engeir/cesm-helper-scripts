@@ -4,4 +4,4 @@ git:
 	git push -u origin main
 
 install:
-	cp src/cesm_helper_scripts/gen_temp ~/.local/bin/ && chmod +x ~/.local/bin/gen_temp
+	cp src/cesm_helper_scripts/gen_agg ~/.local/bin/ && chmod +x ~/.local/bin/gen_agg

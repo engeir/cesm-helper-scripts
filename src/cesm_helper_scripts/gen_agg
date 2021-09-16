@@ -1,12 +1,14 @@
 #!/cluster/home/een023/.virtualenvs/p3/bin/python
 
-"""Send in a path to .nc files and the name of the files.
-Either as a list of many files or with the asterisk (wildcard?) notation, `"*.nc"`.
-Note that the wildcard notation must be sent in as a string like the above example.
+"""Generate aggregated netCDF files.
 
-Then creates a summary file for temperature.
+Send in a path to .nc files and the name of the files. Either as a list of many files or
+with the asterisk (wildcard) notation, `"*.nc"`. Note that when using the wildcard
+notation the string must be wrapped in quotation marks like in the above example.
+
+Then creates a summary file for temperature or any valid attribute.
 Usage:
-    gen_temp.py -p look/here -i one.nc two.nc -sp input -o output_name
+    gen_temp -p look/here -i one.nc two.nc -sp input -o output_name -y -a ATTR
 """
 
 import argparse
@@ -19,10 +21,17 @@ from typing import List, Union
 import xarray as xr
 
 parser = argparse.ArgumentParser(
-    description="Create a file containing only the temperature variable."
+    description="Create a file containing only the temperature variable.",
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
-parser.add_argument("-p", "--path", help="path to .nc files")
-parser.add_argument("-sp", "--savepath", help="path to where the .nc file is saved")
+parser.add_argument("-p", "--path", type=str, default=".", help="path to .nc files")
+parser.add_argument(
+    "-sp",
+    "--savepath",
+    type=str,
+    default="input",
+    help="path to where the .nc file is saved",
+)
 parser.add_argument(
     "-i",
     "--input",
@@ -37,6 +46,13 @@ parser.add_argument(
     action="store_true",
     help="If given, a 12 month running average is computed.",
 )
+parser.add_argument(
+    "-a",
+    "--attribute",
+    type=str,
+    default="TREFHT",
+    help="attribute of netCDF file",
+)
 
 args = parser.parse_args()
 # Correct the input argument
@@ -49,6 +65,7 @@ else:
     output = args.output
 if output.split(".")[-1] != "nc":
     output += ".nc"
+output = args.attribute + output
 # Correct the path argument
 if args.path is not None:
     path = args.path + "/" if args.path[-1] != "/" else args.path
@@ -91,7 +108,9 @@ else:
 
 dataset = xr.open_mfdataset(the_input)
 dataset = xr.decode_cf(dataset)
-ds = dataset.TREFHT  # This is probably the correct one, reference height temperature
+# TREFHT: This is probably the correct one for global temperature, reference height
+# temperature. SNOWHLND: land snow volume?
+ds = getattr(dataset, args.attribute)
 if args.year:
     ds = ds.chunk({"time": 12})
     r = ds.rolling(time=12)
