@@ -112,14 +112,18 @@ for a in args.attributes:
 if len(attrs) == 0:
     sys.exit("All attributes files already exist. Exiting...")
 
+print("Creating aggregated dataset...")
 dataset = xr.open_mfdataset(the_input)
 dataset = xr.decode_cf(dataset)
+print("Finished creating aggregated dataset...")
 # TREFHT: This is probably the correct one for global temperature, reference height
 # temperature. SNOWHLND: land snow volume?
 for a in attrs:
+    print(f"Start creating file for attr {a}")
     ds = getattr(dataset, a)
     if args.year:
         ds = ds.chunk({"time": 12})
         r = ds.rolling(time=12)
         ds = r.mean()
     ds.to_netcdf(savepath + a + output)
+    print(f"Finished creating {a + output}.")
