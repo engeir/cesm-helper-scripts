@@ -48,10 +48,11 @@ parser.add_argument(
 )
 parser.add_argument(
     "-a",
-    "--attribute",
+    "--attributes",
     type=str,
+    nargs="+",
     default="TREFHT",
-    help="attribute of netCDF file",
+    help="List of attributes of netCDF file",
 )
 
 args = parser.parse_args()
@@ -65,7 +66,6 @@ else:
     output = args.output
 if output.split(".")[-1] != "nc":
     output += ".nc"
-output = args.attribute + output
 # Correct the path argument
 if args.path is not None:
     path = args.path + "/" if args.path[-1] != "/" else args.path
@@ -98,21 +98,28 @@ else:
 savepath = args.savepath if args.savepath is not None else ""
 savepath = path if savepath == "input" else savepath
 savepath = savepath + "/" if savepath != "" and savepath[-1] != "/" else savepath
-# Check if output file exist
-if os.path.exists(savepath + output):
-    sys.exit(f"A file with the name {output} already exist. Exiting...")
-else:
-    if savepath != "":
-        os.makedirs(savepath, exist_ok=True)
-    print("Saving to", savepath + output)
+c = 0
+for a in args.attributes:
+    op = a + output
+    # Check if output file exist
+    if os.path.exists(savepath + op):
+        print(f"A file with the name {op} already exist.")
+        c += 1
+    else:
+        if savepath != "":
+            os.makedirs(savepath, exist_ok=True)
+        print("Saving to", savepath + output)
+if c == len(args.attributes):
+    sys.exit("All attributes files already exist. Exiting...")
 
 dataset = xr.open_mfdataset(the_input)
 dataset = xr.decode_cf(dataset)
 # TREFHT: This is probably the correct one for global temperature, reference height
 # temperature. SNOWHLND: land snow volume?
-ds = getattr(dataset, args.attribute)
-if args.year:
-    ds = ds.chunk({"time": 12})
-    r = ds.rolling(time=12)
-    ds = r.mean()
-ds.to_netcdf(savepath + output)
+for a in args.attributes:
+    ds = getattr(dataset, a)
+    if args.year:
+        ds = ds.chunk({"time": 12})
+        r = ds.rolling(time=12)
+        ds = r.mean()
+    ds.to_netcdf(savepath + a + output)
