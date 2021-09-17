@@ -98,25 +98,25 @@ else:
 savepath = args.savepath if args.savepath is not None else ""
 savepath = path if savepath == "input" else savepath
 savepath = savepath + "/" if savepath != "" and savepath[-1] != "/" else savepath
-c = 0
+attrs = []
 for a in args.attributes:
     op = a + output
     # Check if output file exist
     if os.path.exists(savepath + op):
         print(f"A file with the name {op} already exist.")
-        c += 1
     else:
         if savepath != "":
             os.makedirs(savepath, exist_ok=True)
-        print("Saving to", savepath + output)
-if c == len(args.attributes):
+        print("Saving to", savepath + op)
+        attrs.append(a)
+if len(attrs) == 0:
     sys.exit("All attributes files already exist. Exiting...")
 
 dataset = xr.open_mfdataset(the_input)
 dataset = xr.decode_cf(dataset)
 # TREFHT: This is probably the correct one for global temperature, reference height
 # temperature. SNOWHLND: land snow volume?
-for a in args.attributes:
+for a in attrs:
     ds = getattr(dataset, a)
     if args.year:
         ds = ds.chunk({"time": 12})
