@@ -51,7 +51,7 @@ parser.add_argument(
     "--attributes",
     type=str,
     nargs="+",
-    default="TREFHT",
+    default=["TREFHT"],
     help="List of attributes of netCDF file",
 )
 
