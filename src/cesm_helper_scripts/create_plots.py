@@ -195,24 +195,6 @@ def attr_vs_time(sigmal):
     weights.name = "weights"
     air_weighted = sigmal.weighted(weights)
     k_w = air_weighted.mean(("lon", "lat"))
-    # k = temps.mean(dim=['lat', 'lon'])
-    # try:
-    #     k_w.plot()
-    #     # plt.savefig(f"{savepath}{output}_temp.png")
-    #     plt.show()
-    #     print(1)
-    # except:
-    #     t_ = k_w.indexes["time"]
-    #     t = []
-    #     for d in t_:
-    #         t.append(float(str(d)[:10].replace("-", "")))
-    #     T = list(k_w.data)
-    #     plt.plot(t, T)
-    #     plt.savefig(f"{savepath}{output}_temp.png")
-    #     print(2)
-    # finally:
-    #     plt.close()
-    #     print(3)
     k_w.plot()
     plt.savefig(f"{savepath}{output}_simple.png")
     plt.close()

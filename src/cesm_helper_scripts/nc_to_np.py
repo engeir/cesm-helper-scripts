@@ -13,6 +13,7 @@ import glob
 import os
 import sys
 
+import cftime
 import numpy as np
 import xarray as xr
 
@@ -75,7 +76,7 @@ def file_exist(end):
         ans = str(
             input(
                 f"The file {output}{end} already exist in "
-                + '{savepath[:-1] if savepath != "" else "this directory"}. '
+                + f'"{savepath[:-1] if savepath != "" else "this directory"}". '
                 + "Do you want to overwrite this? (y/n)\t"
             )
         )
@@ -108,10 +109,17 @@ def nc_to_np(temps):
     weights.name = "weights"
     air_weighted = temps.weighted(weights)
     k_w = air_weighted.mean(("lon", "lat"))
-    # k = temps.mean(dim=['lat', 'lon'])
-    t = k_w.indexes["time"].to_datetimeindex()
+    # Sets the time in decimal years. Calendar is without leap years.
+    shift = str(k_w["time"].data[0])[:4]
+    t_0 = f"{shift}-01-01 00:00:00"
+    t = (
+        cftime.date2num(
+            k_w["time"].data, f"days since {t_0}", calendar="noleap", has_year_zero=True
+        )
+        + float(shift) * 365
+    ) / 365
     T = k_w.data
-    np.savez(f"{savepath}{output}.npz", data=T, times=t)
+    np.savez(f"{savepath}{output}.npz", data=T, times=t, t_0=t_0)
 
 
 def main():
