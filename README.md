@@ -95,7 +95,8 @@ source ~/.virtualenvs/p3/bin/activate
 We then run
 
 ```sh
-gen_agg -i "e_slab_custom_frc.cam.h0.000*" -a LWCF SWCF
+gen_agg -i "e_slab_custom_frc.cam.h0.000*" -a LWCF SWCF TREFHT
 ```
 
-if we want two files; one for the variable `LWCF` and one for `SWCF`.
+if we want three files; one for the variable `LWCF` one for `SWCF` and one the reference
+height temperature `TREFHT`.
