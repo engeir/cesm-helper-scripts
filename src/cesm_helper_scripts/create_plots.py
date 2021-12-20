@@ -156,17 +156,16 @@ def anim(signal):
 
     def draw(frame, add_colorbar):
         grid = signal[frame]
-        contour = grid.plot(
+        # title = u"%s — %s" % (ds.t2m.long_name, str(
+        #     time_temp.time[frame].values)[:19])
+        # ax.set_title(title)
+        return grid.plot(
             ax=ax,
             transform=ccrs.PlateCarree(),
             add_colorbar=add_colorbar,
             vmin=min_value,
             vmax=max_value,
         )
-        # title = u"%s — %s" % (ds.t2m.long_name, str(
-        #     time_temp.time[frame].values)[:19])
-        # ax.set_title(title)
-        return contour
 
     def init():
         return draw(0, add_colorbar=True)

@@ -11,6 +11,7 @@ Usage:
     gen_temp -p look/here -i one.nc two.nc -sp input -o output_name -y -a ATTR
 """
 
+
 import argparse
 import datetime
 import glob
@@ -109,7 +110,7 @@ for a in args.attributes:
             os.makedirs(savepath, exist_ok=True)
         print("Saving to", savepath + op)
         attrs.append(a)
-if len(attrs) == 0:
+if not attrs:
     sys.exit("All attributes files already exist. Exiting...")
 
 print("Creating aggregated dataset...")
