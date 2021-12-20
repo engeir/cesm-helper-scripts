@@ -105,3 +105,5 @@ visible band `AEROD_v`, in which case we run
 ```sh
 gen_agg -i "e_slab_custom_frc.cam.h0.000*" -a LWCF SWCF TREFHT AEROD_v
 ```
+
+(See the full list of attributes [here](https://www.cesm.ucar.edu/models/cesm2/atmosphere/docs/ug6/hist_flds_f2000.html).)
