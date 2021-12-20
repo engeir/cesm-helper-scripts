@@ -25,18 +25,18 @@ This give two executable packages provided the virtual environment is activated:
 
 ### `gen_agg`
 
-Say you are in the location of you output files for the atmosphere module. It will list
+Say you are in the location of your output files for the atmosphere module. It will list
 files with name `<simulation_name>.cam.h0.YYYY.MM.nc` for the month resolution. Check out
 what variables it contains by running
 
 ```sh
-ncdump -c <file.nc> | sed 5000q | grep <search-string>
+ncdump -c <file.nc> | sed 5000q | grep -i <search-string>
 ```
 
 For example, we may search for `forcing`:
 
 ```console
-$ ncdump -c e_slab_custom_frc.cam.h0.0001-01.nc | sed 5000q | grep forcing
+$ ncdump -c e_slab_custom_frc.cam.h0.0001-01.nc | sed 5000q | grep -i forcing
                 H2O_CLXF:long_name = "vertically intergrated external forcing for H2O" ;
                 H2O_CMXF:long_name = "vertically intergrated external forcing for H2O" ;
                 LWCF:long_name = "Longwave cloud forcing" ;
@@ -80,7 +80,7 @@ To accomplish this we first create an interactive bigmem job:
 srun --nodes=1 --time=00:10:00 --partition=bigmem --mem=10G --account=nn9817k --pty bash -i
 ```
 
-The needed allocated time and memory will depend on the number of files in used. Load all
+The needed allocated time and memory will depend on the number of files used. Load all
 needed modules and activate the virtual environment:
 
 ```sh
@@ -95,8 +95,13 @@ source ~/.virtualenvs/p3/bin/activate
 We then run
 
 ```sh
-gen_agg -i "e_slab_custom_frc.cam.h0.000*" -a LWCF SWCF TREFHT
+gen_agg -i "e_slab_custom_frc.cam.h0.000*" -a LWCF SWCF
 ```
 
-if we want three files; one for the variable `LWCF` one for `SWCF` and one the reference
-height temperature `TREFHT`.
+if we want two files; one for the variable `LWCF` and one for `SWCF`. We probably want the reference
+height temperature `TREFHT` as well, and maybe also the total aerosol optical depth in the
+visible band `AEROD_v`, in which case we run
+
+```sh
+gen_agg -i "e_slab_custom_frc.cam.h0.000*" -a LWCF SWCF TREFHT AEROD_v
+```

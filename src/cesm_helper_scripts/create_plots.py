@@ -197,6 +197,7 @@ def attr_vs_time(sigmal):
     k_w = air_weighted.mean(("lon", "lat"))
     k_w.plot()
     plt.savefig(f"{savepath}{output}_simple.png")
+    plt.show()
     plt.close()
 
 
