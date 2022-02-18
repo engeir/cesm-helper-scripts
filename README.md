@@ -23,7 +23,7 @@ This give two executable packages provided the virtual environment is activated:
 
 ## Usage
 
-<details><summary>`gen_agg`</summary><br>
+<details><summary><code>gen_agg</code></summary><br>
 
 Say you are in the location of your output files for the atmosphere module. It will list
 files with name `<simulation_name>.cam.h0.YYYY.MM.nc` for the month resolution. Check out
@@ -110,7 +110,7 @@ gen_agg -i "e_slab_custom_frc.cam.h0.000*" -a LWCF SWCF TREFHT AEROD_v
 
 </details>
 
-<details><summary>Mimic `cycle` with `interp_missing_month`</summary><br>
+<details><summary>Mimic <code>cycle</code> with <code>interp_missing_month</code></summary><br>
 
 This is not really part of the project, but kept here just for convenience.
 
