@@ -16,14 +16,14 @@ poetry install
 
 This give two executable packages provided the virtual environment is activated:
 
--   `cplt`: attribute plots using an aggregated `.nc` file as input, i.e. output of the
-    `gen_agg` script. See `cplt --help`.
--   `nc2np`: generate an `.npz` file from an aggregated `.nc` file, output of the
-    `gen_agg` script. See `nc2np --help`.
+- `cplt`: attribute plots using an aggregated `.nc` file as input, i.e. output of the
+  `gen_agg` script. See `cplt --help`.
+- `nc2np`: generate an `.npz` file from an aggregated `.nc` file, output of the
+  `gen_agg` script. See `nc2np --help`.
 
 ## Usage
 
-### `gen_agg`
+<details><summary><code>gen_agg</code></summary><br>
 
 Say you are in the location of your output files for the atmosphere module. It will list
 files with name `<simulation_name>.cam.h0.YYYY.MM.nc` for the month resolution. Check out
@@ -98,12 +98,32 @@ We then run
 gen_agg -i "e_slab_custom_frc.cam.h0.000*" -a LWCF SWCF
 ```
 
-if we want two files; one for the variable `LWCF` and one for `SWCF`. We probably want the reference
-height temperature `TREFHT` as well, and maybe also the total aerosol optical depth in the
-visible band `AEROD_v`, in which case we run
+if we want two files; one for the variable `LWCF` and one for `SWCF`. We probably want the
+reference height temperature `TREFHT` as well, and maybe also the total aerosol optical
+depth in the visible band `AEROD_v`, in which case we run
 
 ```sh
 gen_agg -i "e_slab_custom_frc.cam.h0.000*" -a LWCF SWCF TREFHT AEROD_v
 ```
 
 (See the full list of attributes [here](https://www.cesm.ucar.edu/models/cesm2/atmosphere/docs/ug6/hist_flds_f2000.html).)
+
+</details>
+
+<details><summary>Mimic <code>cycle</code> with <code>interp_missing_month</code></summary><br>
+
+This is not really part of the project, but kept here just for convenience.
+
+A file that in the CESM2 model is used in cycle mode on the year 1850 can be made into
+produce the same input to CESM2, but in "interp_missing_month" mode.
+
+Assuming you are in the directry of `c2imp.sh` and `set_date_var_nc.py`, and the file you
+want to change is `in.nc`, do
+
+```sh
+sh c2imp.sh in.nc
+```
+
+You probably also have to run the `ncks` command as specified in `c2imp.sh`.
+
+</details>
