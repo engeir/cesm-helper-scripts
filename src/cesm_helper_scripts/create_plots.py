@@ -15,12 +15,17 @@ import glob
 import os
 import sys
 
+import animatplot as amp
 import cartopy.crs as ccrs
-import cartopy.feature as cfeat
+import cftime
+import cosmoplots
+import matplotlib
 import matplotlib.animation as animation
+import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 parser = argparse.ArgumentParser(
     description="Create plots and animations wrt. the attribute of a .nc file. \
@@ -127,11 +132,14 @@ if "anim" in args.plots:
     file_exist(".mp4")
 
 # === <CODE> ===
+__FIG_STD__ = cosmoplots.set_rcparams_dynamo(matplotlib.rcParams)
 
 
 def spherical_plot(time_temp):
     # projections: https://scitools.org.uk/cartopy/docs/latest/crs/projections.html
     # PlateCarree(), Orthographic(-80, 35)
+    fig = plt.figure()
+    _ = fig.add_axes(__FIG_STD__, projection=ccrs.Mollweide())
     p = time_temp.isel(time=0).plot(
         subplot_kws=dict(projection=ccrs.Mollweide(), facecolor="gray"),
         transform=ccrs.PlateCarree(),
@@ -142,54 +150,105 @@ def spherical_plot(time_temp):
     plt.close()
 
 
-def anim(signal):
-    def make_figure():
-        fig = plt.figure(figsize=(8, 3))
-        ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+def anim(
+    dataset: xr.DataArray,
+) -> None:
+    """Show animation of Model output.
 
-        # generate a basemap with country borders, oceans and coastlines
-        # ax.add_feature(cfeat.LAND)
-        # ax.add_feature(cfeat.OCEAN)
-        ax.add_feature(cfeat.COASTLINE)
-        ax.add_feature(cfeat.BORDERS, linestyle="dotted")
-        return fig, ax
+    Parameters
+    ----------
+    dataset: xr.DataArray,
+        Model data
+    """
+    fig = plt.figure()
+    ax = fig.add_axes(__FIG_STD__)
+    div = make_axes_locatable(ax)
+    cax = div.append_axes("right", "5%", "5%")
+    vmax = np.nanmax(dataset.values)
+    vmin = np.nanmin(dataset.values)
 
-    def draw(frame, add_colorbar):
-        grid = signal[frame]
-        # title = u"%s — %s" % (ds.t2m.long_name, str(
-        #     time_temp.time[frame].values)[:19])
-        # ax.set_title(title)
-        return grid.plot(
-            ax=ax,
-            transform=ccrs.PlateCarree(),
-            add_colorbar=add_colorbar,
-            vmin=min_value,
-            vmax=max_value,
-        )
+    frames = []
 
-    def init():
-        return draw(0, add_colorbar=True)
+    for timestep in dataset.time.values:
+        frame = dataset.sel(time=timestep).values
+        frames.append(frame)
 
-    def animate(frame):
-        return draw(frame, add_colorbar=False)
+    cv0 = frames[0]
+    im = ax.imshow(cv0, origin="lower", norm=colors.LogNorm(vmin=vmin, vmax=vmax))
+    fig.colorbar(im, cax=cax)
+    tx = ax.set_title("t = 0")
 
-    fig, ax = make_figure()
-
-    frames = signal.time.size  # Number of frames
-    min_value = signal.values.min()  # Lowest value
-    max_value = signal.values.max()  # Highest value
+    def animate(i: int) -> None:
+        arr = frames[i]
+        now = dataset.time.values[i]
+        im.set_data(arr)
+        im.set_clim(vmin, vmax)
+        tx.set_text(f"t = {now}")
 
     ani = animation.FuncAnimation(
-        fig, animate, frames, interval=0.01, blit=False, init_func=init, repeat=False
+        fig, animate, frames=dataset["time"].values.size, interval=1
     )
-    ani.save(f"{savepath}{output}.mp4", writer=animation.FFMpegWriter(fps=8))
-    plt.close(fig)
+    ani.save(f"{savepath}{output}.mp4", writer="ffmpeg", fps=20)
+    plt.show()
+
+
+def anim2(signal):
+    vmax = np.nanmax(signal.values)
+    vmin = np.nanmin(signal.values)
+    # fig = plt.figure()
+    # _ = fig.add_axes(__FIG_STD__)
+    # block = signal.plot.imshow(animate_over='time')
+    block = amp.blocks.Pcolormesh(
+        signal.lon,
+        signal.lat,
+        signal.values,
+        vmin=vmin,
+        vmax=vmax,
+        # norm=colors.LogNorm(vmin=vmin, vmax=vmax),
+    )
+    plt.colorbar(block.quad)
+    time_float = cftime.date2num(signal.time, "days since 0000-01-01") / 365
+    timeline = amp.Timeline(time_float, fps=10)
+    anim = amp.Animation([block], timeline)
+    anim.controls()
+    anim.save_gif(f"{savepath}{output}")
+    anim.save(f"{savepath}{output}.mp4")
+    plt.show()
+
+
+def height_anim(signal):
+    if "lev" not in signal.dims:
+        anim2(signal)
+        return
+    # vmax = np.nanmax(signal.mean(dim="lon").values)
+    # vmin = np.nanmin(signal.mean(dim="lon").values)
+    vmax = 150
+    vmin = 350
+    plt.rcParams["image.cmap"] = "gist_ncar"
+    block = amp.blocks.Pcolormesh(
+        signal.lat,
+        signal.lev,
+        signal.mean(dim="lon").values,
+        # vmin=vmin,
+        # vmax=vmax,
+        norm=colors.LogNorm(vmin=vmin, vmax=vmax),
+    )
+    plt.colorbar(block.quad)
+    time_float = cftime.date2num(signal.time, "days since 0000-01-01") / 365
+    timeline = amp.Timeline(time_float, fps=10)
+    anim = amp.Animation([block], timeline)
+    anim.controls()
+    anim.save_gif(f"{savepath}{output}")
+    anim.save(f"{savepath}{output}.mp4")
+    plt.show()
 
 
 def attr_vs_time(sigmal):
     # Compensate for the different width of grid cells at different latitudes.
     # https://xarray.pydata.org/en/stable/examples/area_weighted_temperature.html
     # Need mean = ( sum n*cos(lat) ) / ( sum cos(lat) )
+    fig = plt.figure()
+    _ = fig.add_axes(__FIG_STD__)
     weights = np.cos(np.deg2rad(sigmal.lat))
     weights.name = "weights"
     air_weighted = sigmal.weighted(weights)
@@ -209,7 +268,7 @@ def main():
     if "sphere" in args.plots:
         spherical_plot(multi)
     if "anim" in args.plots:
-        anim(multi)
+        height_anim(multi)
 
 
 if __name__ == "__main__":
