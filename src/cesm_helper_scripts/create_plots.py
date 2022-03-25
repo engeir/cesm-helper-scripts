@@ -25,7 +25,7 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+from rich.progress import track
 
 parser = argparse.ArgumentParser(
     description="Create plots and animations wrt. the attribute of a .nc file. \
@@ -135,19 +135,56 @@ if "anim" in args.plots:
 __FIG_STD__ = cosmoplots.set_rcparams_dynamo(matplotlib.rcParams)
 
 
-def spherical_plot(time_temp):
+def spherical_plot(time_temp, time=0, save=""):
     # projections: https://scitools.org.uk/cartopy/docs/latest/crs/projections.html
     # PlateCarree(), Orthographic(-80, 35)
+    __FIG_STD__[2] = 0.7
     fig = plt.figure()
-    _ = fig.add_axes(__FIG_STD__, projection=ccrs.Mollweide())
-    p = time_temp.isel(time=0).plot(
-        subplot_kws=dict(projection=ccrs.Mollweide(), facecolor="gray"),
+    ax = fig.add_axes(__FIG_STD__, projection=ccrs.PlateCarree())
+    if not save:
+        vmin = time_temp.isel(time=time).min().values
+        vmax = time_temp.isel(time=time).max().values
+    else:
+        vmin = time_temp.min().values
+        vmax = time_temp.max().values
+    _ = time_temp.isel(time=time).plot(
+        # subplot_kws=dict(projection=ccrs.Mollweide(), facecolor="gray"),
         transform=ccrs.PlateCarree(),
+        vmin=vmin,
+        vmax=vmax,
     )
-    p.axes.set_global()
-    p.axes.coastlines()
-    plt.savefig(f"{savepath}{output}_sphere.png")
+    ax.set_global()
+    ax.coastlines()
+    if not save:
+        plt.savefig(f"{savepath}{output}_sphere.png")
+    else:
+        plt.savefig(save)
+    fig.clear()
     plt.close()
+
+
+def anim_medium(signal: xr.DataArray) -> None:
+    """Create plot from each time step.
+
+    From https://medium.com/udacity/creating-map-animations-with-python-97e24040f17b
+
+    Parameters
+    ----------
+    signal: xarray.DataArray
+        The signal to plot.
+    """
+    if not os.path.exists(f"{savepath}{output}"):
+        os.makedirs(f"{savepath}{output}")
+    for ii in track(range(1488, len(signal))):
+        # date = signal.time[ii]
+        spherical_plot(
+            signal,
+            ii,
+            save=os.path.join(f"{savepath}{output}", f"frame_{ii:04d}.png"),
+        )
+    print(
+        f"Now, run: ffmpeg -framerate 21 -i {savepath}{output}/frame_%4d.png -c:v h264 -r 30 -s 1920x1080 ./out.mp4"
+    )
 
 
 def anim(
@@ -161,9 +198,9 @@ def anim(
         Model data
     """
     fig = plt.figure()
-    ax = fig.add_axes(__FIG_STD__)
-    div = make_axes_locatable(ax)
-    cax = div.append_axes("right", "5%", "5%")
+    ax = fig.add_axes(__FIG_STD__, projection=ccrs.PlateCarree())
+    # div = make_axes_locatable(ax)
+    # cax = div.append_axes("right", "5%", "5%")
     vmax = np.nanmax(dataset.values)
     vmin = np.nanmin(dataset.values)
 
@@ -174,8 +211,13 @@ def anim(
         frames.append(frame)
 
     cv0 = frames[0]
-    im = ax.imshow(cv0, origin="lower", norm=colors.LogNorm(vmin=vmin, vmax=vmax))
-    fig.colorbar(im, cax=cax)
+    im = ax.imshow(
+        cv0,
+        origin="lower",
+        transform=ccrs.PlateCarree(),
+        norm=colors.LogNorm(vmin=vmin, vmax=vmax),
+    )
+    # fig.colorbar(im, cax=cax)
     tx = ax.set_title("t = 0")
 
     def animate(i: int) -> None:
@@ -189,6 +231,37 @@ def anim(
         fig, animate, frames=dataset["time"].values.size, interval=1
     )
     ani.save(f"{savepath}{output}.mp4", writer="ffmpeg", fps=20)
+    plt.show()
+
+
+def anim3(signal):
+    vmin = signal.min().values
+    vmax = signal.max().values * 0.7
+    fig = plt.figure()
+    __FIG_STD__[2] = 0.7
+    ax = fig.add_axes(__FIG_STD__, projection=ccrs.Robinson())
+    image = signal.isel(time=0).plot.imshow(
+        ax=ax,
+        transform=ccrs.PlateCarree(),
+        animated=True,
+        # vmin=vmin,
+        # vmax=vmax,
+        norm=colors.LogNorm(vmin=vmin, vmax=vmax),
+    )
+    ax.coastlines()
+
+    def update(t):
+        # Update the plot for a specific time
+        # print(t)
+        ax.set_title("time = %s" % t)
+        image.set_array(signal.sel(time=t))
+        return (image,)
+
+    # Run the animation, applying `update()` for each of the times in the variable
+    anim = animation.FuncAnimation(fig, update, frames=signal.time.values, blit=False)
+
+    # Save to file or display on screen
+    anim.save(f"{savepath}{output}.mp4", writer="ffmpeg", fps=20)
     plt.show()
 
 
@@ -218,7 +291,7 @@ def anim2(signal):
 
 def height_anim(signal):
     if "lev" not in signal.dims:
-        anim2(signal)
+        anim3(signal)
         return
     # vmax = np.nanmax(signal.mean(dim="lon").values)
     # vmin = np.nanmin(signal.mean(dim="lon").values)
@@ -262,12 +335,12 @@ def attr_vs_time(sigmal):
 # === </CODE> ===
 def main():
     multi = xr.open_dataarray(inputs)
-    # multi_T = multi_T.isel(lev=0)
     if "simple" in args.plots:
         attr_vs_time(multi)
     if "sphere" in args.plots:
         spherical_plot(multi)
     if "anim" in args.plots:
+        # anim3(multi)
         height_anim(multi)
 
 
