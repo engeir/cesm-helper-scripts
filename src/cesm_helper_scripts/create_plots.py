@@ -16,7 +16,6 @@ import os
 import sys
 
 import animatplot as amp
-import cartopy.crs as ccrs
 import cftime
 import cosmoplots
 import matplotlib
@@ -25,7 +24,22 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from rich.progress import track
+
+try:
+    import cartopy.crs as ccrs
+
+    # from xmovie.presets import rotating_globe
+    from presets import static_globe
+    from xmovie import Movie
+except ImportError:
+    __CONDA__ = False
+    print(
+        "Cannot import cartopy and xmovie. "
+        + "Please install into a conda environment."
+    )
+else:
+    __CONDA__ = True
+
 
 parser = argparse.ArgumentParser(
     description="Create plots and animations wrt. the attribute of a .nc file. \
@@ -163,30 +177,6 @@ def spherical_plot(time_temp, time=0, save=""):
     plt.close()
 
 
-def anim_medium(signal: xr.DataArray) -> None:
-    """Create plot from each time step.
-
-    From https://medium.com/udacity/creating-map-animations-with-python-97e24040f17b
-
-    Parameters
-    ----------
-    signal: xarray.DataArray
-        The signal to plot.
-    """
-    if not os.path.exists(f"{savepath}{output}"):
-        os.makedirs(f"{savepath}{output}")
-    for ii in track(range(1488, len(signal))):
-        # date = signal.time[ii]
-        spherical_plot(
-            signal,
-            ii,
-            save=os.path.join(f"{savepath}{output}", f"frame_{ii:04d}.png"),
-        )
-    print(
-        f"Now, run: ffmpeg -framerate 21 -i {savepath}{output}/frame_%4d.png -c:v h264 -r 30 -s 1920x1080 ./out.mp4"
-    )
-
-
 def anim(
     dataset: xr.DataArray,
 ) -> None:
@@ -234,6 +224,18 @@ def anim(
     plt.show()
 
 
+def xmov(signal):
+    vmin = signal.min().values
+    vmax = signal.max().values * 0.7
+    mov = Movie(signal, plotfunc=static_globe, style="dark", vmin=vmin, vmax=vmax)
+    mov.save(
+        f"{savepath}{output}.gif",
+        progress=True,
+        overwrite_existing=True,
+        remove_movie=False,
+    )
+
+
 def anim3(signal):
     vmin = signal.min().values
     vmax = signal.max().values * 0.7
@@ -265,7 +267,7 @@ def anim3(signal):
     plt.show()
 
 
-def anim2(signal):
+def pure_python_anim(signal):
     vmax = np.nanmax(signal.values)
     vmin = np.nanmin(signal.values)
     # fig = plt.figure()
@@ -291,7 +293,7 @@ def anim2(signal):
 
 def height_anim(signal):
     if "lev" not in signal.dims:
-        anim3(signal)
+        xmov(signal) if __CONDA__ else pure_python_anim(signal)
         return
     # vmax = np.nanmax(signal.mean(dim="lon").values)
     # vmin = np.nanmin(signal.mean(dim="lon").values)

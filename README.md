@@ -14,12 +14,27 @@ Inside a virtual environment, run:
 poetry install
 ```
 
-This give two executable packages provided the virtual environment is activated:
+This give two entry points / executable packages provided the virtual environment is
+activated:
 
 - `cplt`: attribute plots using an aggregated `.nc` file as input, i.e. output of the
   `gen_agg` script. See `cplt --help`.
 - `nc2np`: generate an `.npz` file from an aggregated `.nc` file, output of the
   `gen_agg` script. See `nc2np --help`.
+
+The version that uses the `cartopy` module to create maps with geographical geometry must
+be installed as a `conda` environment:
+
+```sh
+# Install env with name conda-cesm ...
+conda create --file environment.yaml
+# ... or give the env a custom name.
+conda create --file environment.yaml --name custom-name
+```
+
+The entry points will not work with the `conda` installation, and the full path need to be
+used instead. [This][conda-stackoverflow] thread explains how it is not possible to
+install modules from conda-forge when creating a conda project. Weird.
 
 ## Usage
 
@@ -127,3 +142,5 @@ sh c2imp.sh in.nc
 You probably also have to run the `ncks` command as specified in `c2imp.sh`.
 
 </details>
+
+[conda-stackoverflow]: https://stackoverflow.com/questions/63182614/python-packaging-creating-a-dependency-on-a-conda-forge-package-in-conda-m
