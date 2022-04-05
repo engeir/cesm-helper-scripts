@@ -102,7 +102,7 @@ numpy = ">1.13.3"
 
 [[package]]
 name = "click"
-version = "8.1.0"
+version = "8.1.1"
 description = "Composable command line interface toolkit"
 category = "dev"
 optional = false
@@ -834,15 +834,16 @@ testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", 
 
 [[package]]
 name = "xarray"
-version = "0.19.0"
+version = "2022.3.0"
 description = "N-D labeled arrays and datasets in Python"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 
 [package.dependencies]
-numpy = ">=1.17"
-pandas = ">=1.0"
+numpy = ">=1.18"
+packaging = ">=20.0"
+pandas = ">=1.1"
 
 [package.extras]
 accel = ["scipy", "bottleneck", "numbagg"]
@@ -873,7 +874,7 @@ xmovie = ["xmovie"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "34bb97983349614a78b2b1f174a68890cc6bde7c1c3285a4b349f18764555314"
+content-hash = "6781ca9976c2bffede08c6dea8aa70fd9c19e873081359943e89291ed59e30e2"
 
 [metadata.files]
 animatplot = [
@@ -957,8 +958,8 @@ cftime = [
     {file = "cftime-1.6.0.tar.gz", hash = "sha256:13103e6650beea6552316bd5825d6aa3b7e98f5b8115026df4826798dff9f741"},
 ]
 click = [
-    {file = "click-8.1.0-py3-none-any.whl", hash = "sha256:19a4baa64da924c5e0cd889aba8e947f280309f1a2ce0947a3e3a7bcb7cc72d6"},
-    {file = "click-8.1.0.tar.gz", hash = "sha256:977c213473c7665d3aa092b41ff12063227751c41d7b17165013e10069cc5cd2"},
+    {file = "click-8.1.1-py3-none-any.whl", hash = "sha256:5e0d195c2067da3136efb897449ec1e9e6c98282fbf30d7f9e164af9be901a6b"},
+    {file = "click-8.1.1.tar.gz", hash = "sha256:7ab900e38149c9872376e8f9b5986ddcaf68c0f413cf73678a0bca5547e6f976"},
 ]
 cloudpickle = [
     {file = "cloudpickle-2.0.0-py3-none-any.whl", hash = "sha256:6b2df9741d06f43839a3275c4e6632f7df6487a1f181f5f46a052d3c917c3d11"},
@@ -1547,8 +1548,8 @@ virtualenv = [
     {file = "virtualenv-20.14.0.tar.gz", hash = "sha256:8e5b402037287126e81ccde9432b95a8be5b19d36584f64957060a3488c11ca8"},
 ]
 xarray = [
-    {file = "xarray-0.19.0-py3-none-any.whl", hash = "sha256:da0f0d7719b5ee95143a34804e3afb82cb8abbe5c10f9750a9dbed156ad30f00"},
-    {file = "xarray-0.19.0.tar.gz", hash = "sha256:3a365ce09127fc841ba88baa63f37ca61376ffe389a6c5e66d52f2c88c23a62b"},
+    {file = "xarray-2022.3.0-py3-none-any.whl", hash = "sha256:560f36eaabe7a989d5583d37ec753dd737357aa6a6453e55c80bb4f92291a69e"},
+    {file = "xarray-2022.3.0.tar.gz", hash = "sha256:398344bf7d170477aaceff70210e11ebd69af6b156fe13978054d25c48729440"},
 ]
 xmovie = [
     {file = "xmovie-0.3.1-py3-none-any.whl", hash = "sha256:145aaaf956bfa332ee309c2a1645e7e85ebec9d20393fcaead7905a995d3db7b"},
