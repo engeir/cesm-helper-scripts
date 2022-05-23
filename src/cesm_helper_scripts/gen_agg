@@ -121,10 +121,14 @@ print("Finished creating aggregated dataset...")
 # temperature. SNOWHLND: land snow volume?
 for a in attrs:
     print(f"Start creating file for attr {a}")
-    ds = getattr(dataset, a)
-    if args.year:
-        ds = ds.chunk({"time": 12})
-        r = ds.rolling(time=12)
-        ds = r.mean()
-    ds.to_netcdf(savepath + a + output)
-    print(f"Finished creating {a + output}.")
+    try:
+        ds = getattr(dataset, a)
+    except AttributeError as e:
+        print(e)
+    else:
+        if args.year:
+            ds = ds.chunk({"time": 12})
+            r = ds.rolling(time=12)
+            ds = r.mean()
+        ds.to_netcdf(savepath + a + output)
+        print(f"Finished creating {a + output}.")
