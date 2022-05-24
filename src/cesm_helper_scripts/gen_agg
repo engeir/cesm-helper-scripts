@@ -123,7 +123,9 @@ print("Finished creating aggregated dataset.")
 # TREFHT: This is probably the correct one for global temperature, reference height
 # temperature. SNOWHLND: land snow volume?
 for i, a in enumerate(attrs):
-    print(f"{i}/{len(a)}: Start creating file for attr {a}... ", end="", flush=True)
+    print(
+        f"{i+1}/{len(attrs)}: Start creating file for attr {a}... ", end="", flush=True
+    )
     try:
         ds = getattr(dataset, a)
     except AttributeError as e:
