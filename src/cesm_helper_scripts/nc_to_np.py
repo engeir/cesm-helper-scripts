@@ -38,6 +38,13 @@ parser.add_argument(
 )
 parser.add_argument("-i", "--input", type=str, help="Input .nc file.")
 parser.add_argument("-o", "--output", help="Name of the output files.")
+parser.add_argument(
+    "-y",
+    "--yes",
+    default=False,
+    help="Answer yes to all questions.",
+    action="store_true",
+)
 
 args = parser.parse_args()
 # Correct the input argument
@@ -72,6 +79,13 @@ savepath = savepath + "/" if savepath != "" and savepath[-1] != "/" else savepat
 
 
 def file_exist(end):
+    """Check if the file exist and if it should be overwritten.
+
+    Parameters
+    ----------
+    end : str
+        The file extension.
+    """
     if os.path.exists(savepath + output + end):
         ans = str(
             input(
@@ -86,10 +100,11 @@ def file_exist(end):
         else:
             print("Saving to", savepath + output + end)
     else:
-        ans = str(input(f"Save to {savepath}{output}{end}? (y/n)\t"))
-        if ans != "y":
-            print("Exiting without creating any file...")
-            sys.exit()
+        if not args.yes:
+            ans = str(input(f"Save to {savepath}{output}{end}? (y/n)\t"))
+            if ans != "y":
+                print("Exiting without creating any file...")
+                sys.exit()
         else:
             if savepath != "":
                 os.makedirs(savepath, exist_ok=True)
@@ -102,6 +117,13 @@ file_exist(".npz")
 
 
 def nc_to_np(temps):
+    """Convert the data in a .nc file to a numpy array, and save to .npz.
+
+    Parameters
+    ----------
+    temps : xarray.DataArray
+        The data to be converted.
+    """
     # Compensate for the different width of grid cells at different latitudes.
     # https://xarray.pydata.org/en/stable/examples/area_weighted_temperature.html
     # Need mean = ( sum n*cos(lat) ) / ( sum cos(lat) )
@@ -123,6 +145,7 @@ def nc_to_np(temps):
 
 
 def main():
+    """Run the main function for the script."""
     array = xr.open_dataarray(inputs)
     nc_to_np(array)
 

@@ -15,12 +15,31 @@ import glob
 import os
 import sys
 
-import cartopy.crs as ccrs
-import cartopy.feature as cfeat
+import animatplot as amp
+import cftime
+import cosmoplots
+import matplotlib
 import matplotlib.animation as animation
+import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+
+try:
+    import cartopy.crs as ccrs
+
+    # from xmovie.presets import rotating_globe
+    from presets import static_globe
+    from xmovie import Movie
+except ImportError:
+    __CONDA__ = False
+    print(
+        "Cannot import cartopy and xmovie. "
+        + "Please install into a conda environment."
+    )
+else:
+    __CONDA__ = True
+
 
 parser = argparse.ArgumentParser(
     description="Create plots and animations wrt. the attribute of a .nc file. \
@@ -127,69 +146,184 @@ if "anim" in args.plots:
     file_exist(".mp4")
 
 # === <CODE> ===
+__FIG_STD__ = cosmoplots.set_rcparams_dynamo(matplotlib.rcParams)
 
 
-def spherical_plot(time_temp):
+def spherical_plot(time_temp, time=0, save=""):
     # projections: https://scitools.org.uk/cartopy/docs/latest/crs/projections.html
     # PlateCarree(), Orthographic(-80, 35)
-    p = time_temp.isel(time=0).plot(
-        subplot_kws=dict(projection=ccrs.Mollweide(), facecolor="gray"),
+    __FIG_STD__[2] = 0.7
+    fig = plt.figure()
+    ax = fig.add_axes(__FIG_STD__, projection=ccrs.PlateCarree())
+    if not save:
+        vmin = time_temp.isel(time=time).min().values
+        vmax = time_temp.isel(time=time).max().values
+    else:
+        vmin = time_temp.min().values
+        vmax = time_temp.max().values
+    _ = time_temp.isel(time=time).plot(
+        # subplot_kws=dict(projection=ccrs.Mollweide(), facecolor="gray"),
         transform=ccrs.PlateCarree(),
+        vmin=vmin,
+        vmax=vmax,
     )
-    p.axes.set_global()
-    p.axes.coastlines()
-    plt.savefig(f"{savepath}{output}_sphere.png")
+    ax.set_global()
+    ax.coastlines()
+    if not save:
+        plt.savefig(f"{savepath}{output}_sphere.png")
+    else:
+        plt.savefig(save)
+    fig.clear()
     plt.close()
 
 
-def anim(signal):
-    def make_figure():
-        fig = plt.figure(figsize=(8, 3))
-        ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+def anim(
+    dataset: xr.DataArray,
+) -> None:
+    """Show animation of Model output.
 
-        # generate a basemap with country borders, oceans and coastlines
-        # ax.add_feature(cfeat.LAND)
-        # ax.add_feature(cfeat.OCEAN)
-        ax.add_feature(cfeat.COASTLINE)
-        ax.add_feature(cfeat.BORDERS, linestyle="dotted")
-        return fig, ax
+    Parameters
+    ----------
+    dataset: xr.DataArray,
+        Model data
+    """
+    fig = plt.figure()
+    ax = fig.add_axes(__FIG_STD__, projection=ccrs.PlateCarree())
+    # div = make_axes_locatable(ax)
+    # cax = div.append_axes("right", "5%", "5%")
+    vmax = np.nanmax(dataset.values)
+    vmin = np.nanmin(dataset.values)
 
-    def draw(frame, add_colorbar):
-        grid = signal[frame]
-        # title = u"%s — %s" % (ds.t2m.long_name, str(
-        #     time_temp.time[frame].values)[:19])
-        # ax.set_title(title)
-        return grid.plot(
-            ax=ax,
-            transform=ccrs.PlateCarree(),
-            add_colorbar=add_colorbar,
-            vmin=min_value,
-            vmax=max_value,
-        )
+    frames = []
 
-    def init():
-        return draw(0, add_colorbar=True)
+    for timestep in dataset.time.values:
+        frame = dataset.sel(time=timestep).values
+        frames.append(frame)
 
-    def animate(frame):
-        return draw(frame, add_colorbar=False)
+    cv0 = frames[0]
+    im = ax.imshow(
+        cv0,
+        origin="lower",
+        transform=ccrs.PlateCarree(),
+        norm=colors.LogNorm(vmin=vmin, vmax=vmax),
+    )
+    # fig.colorbar(im, cax=cax)
+    tx = ax.set_title("t = 0")
 
-    fig, ax = make_figure()
-
-    frames = signal.time.size  # Number of frames
-    min_value = signal.values.min()  # Lowest value
-    max_value = signal.values.max()  # Highest value
+    def animate(i: int) -> None:
+        arr = frames[i]
+        now = dataset.time.values[i]
+        im.set_data(arr)
+        im.set_clim(vmin, vmax)
+        tx.set_text(f"t = {now}")
 
     ani = animation.FuncAnimation(
-        fig, animate, frames, interval=0.01, blit=False, init_func=init, repeat=False
+        fig, animate, frames=dataset["time"].values.size, interval=1
     )
-    ani.save(f"{savepath}{output}.mp4", writer=animation.FFMpegWriter(fps=8))
-    plt.close(fig)
+    ani.save(f"{savepath}{output}.mp4", writer="ffmpeg", fps=20)
+    plt.show()
+
+
+def xmov(signal):
+    vmin = signal.min().values
+    vmax = signal.max().values * 0.7
+    mov = Movie(signal, plotfunc=static_globe, style="dark", vmin=vmin, vmax=vmax)
+    mov.save(
+        f"{savepath}{output}.gif",
+        progress=True,
+        overwrite_existing=True,
+        remove_movie=False,
+    )
+
+
+def anim3(signal):
+    vmin = signal.min().values
+    vmax = signal.max().values * 0.7
+    fig = plt.figure()
+    __FIG_STD__[2] = 0.7
+    ax = fig.add_axes(__FIG_STD__, projection=ccrs.Robinson())
+    image = signal.isel(time=0).plot.imshow(
+        ax=ax,
+        transform=ccrs.PlateCarree(),
+        animated=True,
+        # vmin=vmin,
+        # vmax=vmax,
+        norm=colors.LogNorm(vmin=vmin, vmax=vmax),
+    )
+    ax.coastlines()
+
+    def update(t):
+        # Update the plot for a specific time
+        # print(t)
+        ax.set_title("time = %s" % t)
+        image.set_array(signal.sel(time=t))
+        return (image,)
+
+    # Run the animation, applying `update()` for each of the times in the variable
+    anim = animation.FuncAnimation(fig, update, frames=signal.time.values, blit=False)
+
+    # Save to file or display on screen
+    anim.save(f"{savepath}{output}.mp4", writer="ffmpeg", fps=20)
+    plt.show()
+
+
+def pure_python_anim(signal):
+    vmax = np.nanmax(signal.values)
+    vmin = np.nanmin(signal.values)
+    # fig = plt.figure()
+    # _ = fig.add_axes(__FIG_STD__)
+    # block = signal.plot.imshow(animate_over='time')
+    block = amp.blocks.Pcolormesh(
+        signal.lon,
+        signal.lat,
+        signal.values,
+        vmin=vmin,
+        vmax=vmax,
+        # norm=colors.LogNorm(vmin=vmin, vmax=vmax),
+    )
+    plt.colorbar(block.quad)
+    time_float = cftime.date2num(signal.time, "days since 0000-01-01") / 365
+    timeline = amp.Timeline(time_float, fps=10)
+    anim = amp.Animation([block], timeline)
+    anim.controls()
+    anim.save_gif(f"{savepath}{output}")
+    anim.save(f"{savepath}{output}.mp4")
+    plt.show()
+
+
+def height_anim(signal):
+    if "lev" not in signal.dims:
+        xmov(signal) if __CONDA__ else pure_python_anim(signal)
+        return
+    # vmax = np.nanmax(signal.mean(dim="lon").values)
+    # vmin = np.nanmin(signal.mean(dim="lon").values)
+    vmax = 150
+    vmin = 350
+    plt.rcParams["image.cmap"] = "gist_ncar"
+    block = amp.blocks.Pcolormesh(
+        signal.lat,
+        signal.lev,
+        signal.mean(dim="lon").values,
+        # vmin=vmin,
+        # vmax=vmax,
+        norm=colors.LogNorm(vmin=vmin, vmax=vmax),
+    )
+    plt.colorbar(block.quad)
+    time_float = cftime.date2num(signal.time, "days since 0000-01-01") / 365
+    timeline = amp.Timeline(time_float, fps=10)
+    anim = amp.Animation([block], timeline)
+    anim.controls()
+    anim.save_gif(f"{savepath}{output}")
+    anim.save(f"{savepath}{output}.mp4")
+    plt.show()
 
 
 def attr_vs_time(sigmal):
     # Compensate for the different width of grid cells at different latitudes.
     # https://xarray.pydata.org/en/stable/examples/area_weighted_temperature.html
     # Need mean = ( sum n*cos(lat) ) / ( sum cos(lat) )
+    fig = plt.figure()
+    _ = fig.add_axes(__FIG_STD__)
     weights = np.cos(np.deg2rad(sigmal.lat))
     weights.name = "weights"
     air_weighted = sigmal.weighted(weights)
@@ -203,13 +337,13 @@ def attr_vs_time(sigmal):
 # === </CODE> ===
 def main():
     multi = xr.open_dataarray(inputs)
-    # multi_T = multi_T.isel(lev=0)
     if "simple" in args.plots:
         attr_vs_time(multi)
     if "sphere" in args.plots:
         spherical_plot(multi)
     if "anim" in args.plots:
-        anim(multi)
+        # anim3(multi)
+        height_anim(multi)
 
 
 if __name__ == "__main__":
