@@ -7,6 +7,7 @@ Usage:
     temp_nc_to_np -i single_file.nc -p up/three/layers -sp save_two_layers_below_input -o output_name
 """
 
+
 import argparse
 import datetime
 import glob
@@ -57,7 +58,7 @@ else:
     output = args.output
 # Correct the path argument
 if args.path is not None:
-    path = args.path + "/" if args.path[-1] != "/" else args.path
+    path = f"{args.path}/" if args.path[-1] != "/" else args.path
 else:
     path = ""
 # Combine the path with all files
@@ -73,7 +74,9 @@ if not glob.glob(inputs):
 # Correct the savepath argument
 savepath = args.savepath if args.savepath is not None else ""
 savepath = path if savepath == "input" else savepath
-savepath = savepath + "/" if savepath != "" and savepath[-1] != "/" else savepath
+savepath = (
+    f"{savepath}/" if savepath != "" and savepath[-1] != "/" else savepath
+)
 
 # Check if output file exist
 
@@ -99,16 +102,16 @@ def file_exist(end):
             sys.exit()
         else:
             print("Saving to", savepath + output + end)
+    elif args.yes:
+        if savepath != "":
+            os.makedirs(savepath, exist_ok=True)
+        print("Saving to", savepath + output + end)
+
     else:
-        if not args.yes:
-            ans = str(input(f"Save to {savepath}{output}{end}? (y/n)\t"))
-            if ans != "y":
-                print("Exiting without creating any file...")
-                sys.exit()
-        else:
-            if savepath != "":
-                os.makedirs(savepath, exist_ok=True)
-            print("Saving to", savepath + output + end)
+        ans = str(input(f"Save to {savepath}{output}{end}? (y/n)\t"))
+        if ans != "y":
+            print("Exiting without creating any file...")
+            sys.exit()
 
 
 file_exist(".npz")

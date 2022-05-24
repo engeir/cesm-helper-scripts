@@ -90,7 +90,7 @@ def static_globe(
     _set_style(fig, ax, pp, style=style)
 
     clr = _style_dict_raw()[style]["fgcolor"]
-    ax.set_title("time = %s" % data.isel(time=timestamp).time.data, color=clr)
+    ax.set_title(f"time = {data.isel(time=timestamp).time.data}", color=clr)
     ax.set_global()
 
     if land:
