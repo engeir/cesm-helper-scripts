@@ -141,12 +141,13 @@ def nc_to_np(temps):
         + float(shift) * 365
     ) / 365
     T = k_w.data
-    np.savez(f"{savepath}{output}.npz", data=T, times=t, t_0=t_0)
+    lev = getattr(k_w, "lev", None)
+    np.savez(f"{savepath}{output}.npz", data=T, times=t, t_0=t_0, lev=lev)
 
 
 def main():
     """Run the main function for the script."""
-    array = xr.open_dataarray(inputs)
+    array = xr.open_dataarray(inputs, chunks="auto")
     nc_to_np(array)
 
 
