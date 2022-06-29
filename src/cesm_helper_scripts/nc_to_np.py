@@ -142,7 +142,8 @@ def nc_to_np(temps):
     ) / 365
     T = k_w.data
     lev = getattr(k_w, "lev", None)
-    np.savez(f"{savepath}{output}.npz", data=T, times=t, t_0=t_0, lev=lev)
+    ilev = getattr(k_w, "ilev", None)
+    np.savez(f"{savepath}{output}.npz", data=T, times=t, t_0=t_0, lev=lev, ilev=ilev)
 
 
 def main():
