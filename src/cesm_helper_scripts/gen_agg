@@ -69,7 +69,7 @@ if output.split(".")[-1] != "nc":
     output += ".nc"
 # Correct the path argument
 if args.path is not None:
-    path = args.path + "/" if args.path[-1] != "/" else args.path
+    path = f"{args.path}/" if args.path[-1] != "/" else args.path
 else:
     path = ""
 # Combine the path with all files
@@ -98,7 +98,7 @@ else:
 # Correct the savepath argument
 savepath = args.savepath if args.savepath is not None else ""
 savepath = path if savepath == "input" else savepath
-savepath = savepath + "/" if savepath != "" and savepath[-1] != "/" else savepath
+savepath = f"{savepath}/" if savepath != "" and savepath[-1] != "/" else savepath
 attrs = []
 for a in args.attributes:
     op = a + output
