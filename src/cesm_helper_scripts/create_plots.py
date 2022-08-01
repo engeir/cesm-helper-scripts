@@ -9,6 +9,7 @@ Usage:
     temp_plots -i single_file.nc -p up/three/layers -sp save_two_layers_below_input -o output_name -plt simple sphere anim
 """
 
+
 import argparse
 import datetime
 import glob
@@ -92,7 +93,7 @@ else:
     output = args.output
 # Correct the path argument
 if args.path is not None:
-    path = args.path + "/" if args.path[-1] != "/" else args.path
+    path = f"{args.path}/" if args.path[-1] != "/" else args.path
 else:
     path = ""
 # Combine the path with all files
@@ -108,7 +109,7 @@ if not glob.glob(inputs):
 # Correct the savepath argument
 savepath = args.savepath if args.savepath is not None else ""
 savepath = path if savepath == "input" else savepath
-savepath = savepath + "/" if savepath != "" and savepath[-1] != "/" else savepath
+savepath = f"{savepath}/" if savepath != "" and savepath[-1] != "/" else savepath
 
 # Check if output file exist
 
@@ -255,7 +256,7 @@ def anim3(signal):
     def update(t):
         # Update the plot for a specific time
         # print(t)
-        ax.set_title("time = %s" % t)
+        ax.set_title(f"time = {t}")
         image.set_array(signal.sel(time=t))
         return (image,)
 
@@ -318,15 +319,15 @@ def height_anim(signal):
     plt.show()
 
 
-def attr_vs_time(sigmal):
+def attr_vs_time(signal):
     # Compensate for the different width of grid cells at different latitudes.
     # https://xarray.pydata.org/en/stable/examples/area_weighted_temperature.html
     # Need mean = ( sum n*cos(lat) ) / ( sum cos(lat) )
     fig = plt.figure()
     _ = fig.add_axes(__FIG_STD__)
-    weights = np.cos(np.deg2rad(sigmal.lat))
+    weights = np.cos(np.deg2rad(signal.lat))
     weights.name = "weights"
-    air_weighted = sigmal.weighted(weights)
+    air_weighted = signal.weighted(weights)
     k_w = air_weighted.mean(("lon", "lat"))
     k_w.plot()
     plt.savefig(f"{savepath}{output}_simple.png")

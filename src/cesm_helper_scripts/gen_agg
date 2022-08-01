@@ -105,7 +105,7 @@ for a in args.attributes:
     # Check if output file exist
     if os.path.exists(savepath + op):
         print(
-            f"A file with the name {op} already exist.",
+            f"Seems like a file with the name {op} already exist.",
             "Come back tomorrow, or give a custom name using the '-o' option.",
         )
     else:
@@ -135,5 +135,20 @@ for i, a in enumerate(attrs):
             ds = ds.chunk({"time": 12})
             r = ds.rolling(time=12)
             ds = r.mean()
-        ds.to_netcdf(savepath + a + output)
-        print(f"Finished creating {a + output}.")
+        ten_years = 3 * 365  # Found this just by trial & error...
+        tabs = "\t"
+        if len(ds.dims) > 3 and len(ds.time.data) > ten_years:
+            tot_length = len(ds.time.data)
+            parts = 1
+            while parts * ten_years < tot_length:
+                if os.path.exists(savepath + a + output[:-3] + f"-{parts}.nc"):
+                    print(f"{tabs}Part {parts} already exists, skipping...")
+                    tabs = "\t" * 5 + "\t" * int(len(a) // 8)
+                    parts += 1
+                    continue
+                bulk = ds[(parts - 1) * ten_years : parts * ten_years]
+                bulk.to_netcdf(savepath + a + output[:-3] + f"-{parts}.nc")
+                parts += 1
+        else:
+            ds.to_netcdf(savepath + a + output)
+        print(f"{tabs}Finished creating {a + output}.")
