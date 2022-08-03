@@ -7,6 +7,7 @@ Usage:
     temp_nc_to_np -i single_file.nc -p up/three/layers -sp save_two_layers_below_input -o output_name
 """
 
+
 import argparse
 import datetime
 import glob
@@ -36,7 +37,7 @@ parser.add_argument(
     + "the same path is used here as is for the path parameter. "
     + "If not given, the current directory is used.",
 )
-parser.add_argument("-i", "--input", type=str, help="Input .nc file.")
+parser.add_argument("-i", "--input", type=str, nargs="+", help="Input .nc file(s).")
 parser.add_argument("-o", "--output", help="Name of the output files.")
 parser.add_argument(
     "-y",
@@ -57,23 +58,23 @@ else:
     output = args.output
 # Correct the path argument
 if args.path is not None:
-    path = args.path + "/" if args.path[-1] != "/" else args.path
+    path = f"{args.path}/" if args.path[-1] != "/" else args.path
 else:
     path = ""
 # Combine the path with all files
-inputs = (
-    f"{path}{args.input}"
-    if args.input.split(".")[-1] == "nc"
-    else f"{path}{args.input}.nc"
-)
-if not glob.glob(inputs):
-    print(f"I could not find {inputs}")
-    print("Exiting...")
-    sys.exit()
+inputs = [
+    f"{path}{input_}" if input_.split(".")[-1] == "nc" else f"{path}{input_}.nc"
+    for input_ in args.input
+]
+for input_ in inputs:
+    if not glob.glob(input_):
+        print(f"I could not find {input_}")
+        print("Exiting...")
+        sys.exit()
 # Correct the savepath argument
 savepath = args.savepath if args.savepath is not None else ""
 savepath = path if savepath == "input" else savepath
-savepath = savepath + "/" if savepath != "" and savepath[-1] != "/" else savepath
+savepath = f"{savepath}/" if savepath != "" and savepath[-1] != "/" else savepath
 
 # Check if output file exist
 
@@ -94,21 +95,20 @@ def file_exist(end):
                 + "Do you want to overwrite this? (y/n)\t"
             )
         )
+        if ans == "y":
+            print("Saving to", savepath + output + end)
+        else:
+            print("Exiting without creating any file...")
+            sys.exit()
+    elif not args.yes:
+        ans = str(input(f"Save to {savepath}{output}{end}? (y/n)\t"))
         if ans != "y":
             print("Exiting without creating any file...")
             sys.exit()
-        else:
-            print("Saving to", savepath + output + end)
     else:
-        if not args.yes:
-            ans = str(input(f"Save to {savepath}{output}{end}? (y/n)\t"))
-            if ans != "y":
-                print("Exiting without creating any file...")
-                sys.exit()
-        else:
-            if savepath != "":
-                os.makedirs(savepath, exist_ok=True)
-            print("Saving to", savepath + output + end)
+        if savepath != "":
+            os.makedirs(savepath, exist_ok=True)
+        print("Saving to", savepath + output + end)
 
 
 file_exist(".npz")
@@ -116,12 +116,12 @@ file_exist(".npz")
 # Do some work
 
 
-def nc_to_np(temps):
-    """Convert the data in a .nc file to a numpy array, and save to .npz.
+def nc_to_np(temps: xr.Dataset):
+    """Convert the data in an xr.Datset object to a numpy array, and save to .npz.
 
     Parameters
     ----------
-    temps : xarray.DataArray
+    temps : xr.Dataset
         The data to be converted.
     """
     # Compensate for the different width of grid cells at different latitudes.
@@ -148,7 +148,13 @@ def nc_to_np(temps):
 
 def main():
     """Run the main function for the script."""
-    array = xr.open_dataarray(inputs, chunks="auto")
+    array_ds = xr.open_mfdataset(inputs, chunks="auto")
+    if len(list(array_ds.data_vars)) != 1:
+        raise ValueError(
+            "The input file must contain only one variable. "
+            + f"Found {list(array_ds.data_vars)}"
+        )
+    array = getattr(array_ds, list(array_ds.data_vars)[0])
     nc_to_np(array)
 
 
