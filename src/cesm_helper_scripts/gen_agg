@@ -129,7 +129,7 @@ for i, a in enumerate(attrs):
     try:
         ds = getattr(dataset, a)
     except AttributeError as e:
-        print(e)
+        print(f"\t{e}")
     else:
         if args.year:
             ds = ds.chunk({"time": 12})
@@ -147,8 +147,14 @@ for i, a in enumerate(attrs):
                     parts += 1
                     continue
                 bulk = ds[(parts - 1) * ten_years : parts * ten_years]
+                bulk = bulk.assign_attrs(
+                    {"Time span": f"From {bulk.time.data[0]} to {bulk.time.data[-1]}"}
+                )
                 bulk.to_netcdf(savepath + a + output[:-3] + f"-{parts}.nc")
                 parts += 1
         else:
+            ds = ds.assign_attrs(
+                {"Time span": f"From {ds.time.data[0]} to {ds.time.data[-1]}"}
+            )
             ds.to_netcdf(savepath + a + output)
         print(f"{tabs}Finished creating {a + output}.")
