@@ -1,1 +1,4 @@
-__version__ = "0.3.1"
+"""CESM Helper Scripts."""
+from importlib_metadata import version
+
+__version__ = version(__package__)

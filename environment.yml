@@ -21,6 +21,8 @@ dependencies:
   - conda-forge::xmovie>=0.3.1,<0.4.0
   - tqdm>=4.63.1,<5.0.0
   - xarray>=2022.3.0,<2023.0.0
+  - h5netcdf>=1.0.2,<2.0.0
+  - importlib-metadata>=4.12.0,<5.0.0
   - pip
   - pip:
     - nc-time-axis>=1.2.0,<2.0.0
