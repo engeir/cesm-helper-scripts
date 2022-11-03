@@ -218,6 +218,7 @@ def xmov(da):
     vmin = da.min().values
     vmax = da.max().values * 0.8
     mov = Movie(da.chunk({"time": 1}), _latlon_over_time, vmin=vmin, vmax=vmax)
+    # FIXME: parallel gives several prompts
     mov.save(
         f"{savepath}{output}.mp4",
         progress=True,
