@@ -54,6 +54,13 @@ parser.add_argument(
 parser.add_argument("-i", "--input", type=str, help="Input .nc file.")
 parser.add_argument("-o", "--output", help="Name of the output files.")
 parser.add_argument(
+    "-m",
+    "--map",
+    default="cyl",
+    type=str,
+    help="Set the map projection. Note that not all projections support limiting the lat/lon region.",
+)
+parser.add_argument(
     "--maps",
     action="store_true",
     help="Show URL to a list of available map projections.",
@@ -64,6 +71,20 @@ parser.add_argument(
     type=str,
     nargs="+",
     help="List of the plots that should be generated.",
+)
+parser.add_argument(
+    "--slice",
+    help="Used to slice the DataArray. Slices are defined in quotes in the same way they would be inside square brackets.",
+)
+parser.add_argument(
+    "-t", "--timestamp", type=int, default=0, help="Time index of spherical plot."
+)
+parser.add_argument(
+    "--latlon",
+    default=[None, None, None, None],
+    type=int,
+    nargs=4,
+    help="Latitude (low, high) and longitude (low, high).",
 )
 
 args = parser.parse_args()
@@ -106,11 +127,12 @@ if not glob.glob(inputs):
 savepath = args.savepath if args.savepath is not None else ""
 savepath = path if savepath == "input" else savepath
 savepath = f"{savepath}/" if savepath != "" and savepath[-1] != "/" else savepath
-
-# Check if output file exist
+lat_1, lat_2, lon_1, lon_2 = args.latlon
+map_proj = args.map
 
 
 def _file_exist(end):
+    """Check if output file exist."""
     if os.path.exists(savepath + output + end):
         ans = str(
             input(
@@ -153,15 +175,17 @@ def _latlon_over_time(
     # fig = plt.figure()
     fig.subplots()
     # ax = fig.add_axes(__FIG_STD__)
-    the_map = Basemap(projection="moll", lon_0=0, lat_0=0, resolution="l")
-    # the_map = Basemap(
-    #     lon_0=0,
-    #     llcrnrlon=-40,
-    #     llcrnrlat=-40,
-    #     urcrnrlon=40,
-    #     urcrnrlat=40,
-    #     resolution="l",
-    # )
+    # the_map = Basemap(projection="moll", lon_0=0, lat_0=0, resolution="l")
+    the_map = Basemap(
+        projection=map_proj,
+        lon_0=0,
+        lat_0=0,
+        llcrnrlon=lon_1,
+        llcrnrlat=lat_1,
+        urcrnrlon=lon_2,
+        urcrnrlat=lat_2,
+        resolution="l",
+    )
     the_map.drawcoastlines(linewidth=0.25)
     the_map.drawmeridians(np.arange(0, 360, 30), linewidth=0.25)
     the_map.drawparallels(np.arange(-90, 90, 30), linewidth=0.25)
@@ -188,18 +212,21 @@ def xmov(da):
 
     Parameters
     ----------
-    da: xr.DataArray,
+    da: xr.DataArray
         Model data
     """
     vmin = da.min().values
-    vmax = da.max().values * 0.4
-    mov = Movie(da, _latlon_over_time, vmin=vmin, vmax=vmax)
+    vmax = da.max().values * 0.8
+    mov = Movie(da.chunk({"time": 1}), _latlon_over_time, vmin=vmin, vmax=vmax)
     mov.save(
         f"{savepath}{output}.mp4",
         progress=True,
+        parallel=True,
+        parallel_compute_kwargs=dict(scheduler="processes", num_workers=8),
         overwrite_existing=True,
         remove_movie=False,
         framerate=5,
+        # verbose=True,
     )
 
 
@@ -252,12 +279,24 @@ def attr_vs_time(signal):
 def main():
     """Run the main function."""
     multi = xr.open_dataarray(inputs)
+    if args.slice is not None:
+        try:
+            multi = multi[
+                slice(
+                    *map(
+                        lambda x: int(x.strip()) if x.strip() else None,
+                        args.slice.split(":"),
+                    )
+                )
+            ]
+        except Exception as e:
+            raise IndexError(f"Slicing failed. Tried with `da[{args.slice}]`.") from e
     if "simple" in args.plots:
         attr_vs_time(multi)
     if "sphere" in args.plots:
-        spherical_plot(multi, 46)
+        spherical_plot(multi, args.timestamp)
     if "anim" in args.plots:
-        xmov(multi[44:94])
+        height_anim(multi)
 
 
 if __name__ == "__main__":
