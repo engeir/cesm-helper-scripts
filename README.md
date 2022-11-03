@@ -6,11 +6,11 @@
 
 ## Install
 
-Clone with `git clone https://github.com/engeir/cesm-helper-scripts.git`.
+Clone with git and install with poetry into a virtual environment:
 
-Inside a virtual environment, run:
-
-```sh
+```bash
+git clone https://github.com/engeir/cesm-helper-scripts.git
+cd cesm-helper-scripts
 poetry install
 ```
 
@@ -22,29 +22,15 @@ activated:
 - `nc2np`: generate an `.npz` file from an aggregated `.nc` file, output of the
   `gen_agg` script. See `nc2np --help`.
 
-The version that uses the `cartopy` module to create maps with geographical geometry must
-be installed as a `conda` environment:
-
-```sh
-# Install env with name conda-cesm ...
-conda create --file environment.yaml
-# ... or give the env a custom name.
-conda create --file environment.yaml --name custom-name
-```
-
-The entry points will not work with the `conda` installation, and the full path need to be
-used instead. [This][conda-stackoverflow] thread explains how it is not possible to
-install modules from conda-forge when creating a conda project. Weird.
-
 ## Usage
 
 <details><summary><code>gen_agg</code></summary><br>
 
 Say you are in the location of your output files for the atmosphere module. It will list
-files with name `<simulation_name>.cam.h0.YYYY.MM.nc` for the month resolution. Check out
-what variables it contains by running
+files with name `<simulation_name>.cam.h0.YYYY.MM.nc` for the month resolution. Check
+out what variables it contains by running
 
-```sh
+```bash
 ncdump -c <file.nc> | sed 5000q | grep -i <search-string>
 ```
 
@@ -91,14 +77,14 @@ e_slab_custom_frc.cam.h0.0001-06.nc
 
 To accomplish this we first create an interactive bigmem job:
 
-```sh
+```bash
 srun --nodes=1 --time=00:10:00 --partition=bigmem --mem=10G --account=nn9817k --pty bash -i
 ```
 
 The needed allocated time and memory will depend on the number of files used. Load all
 needed modules and activate the virtual environment:
 
-```sh
+```bash
 module load Python/3.8.2-GCCcore-9.3.0;
 module load matplotlib/3.2.1-intel-2020a-Python-3.8.2;
 module load GEOS/3.8.1-iccifort-2020.1.217-Python-3.8.2;
@@ -109,7 +95,7 @@ source ~/.virtualenvs/p3/bin/activate
 
 We then run
 
-```sh
+```bash
 gen_agg -i "e_slab_custom_frc.cam.h0.000*" -a LWCF SWCF
 ```
 
@@ -117,7 +103,7 @@ if we want two files; one for the variable `LWCF` and one for `SWCF`. We probabl
 reference height temperature `TREFHT` as well, and maybe also the total aerosol optical
 depth in the visible band `AEROD_v`, in which case we run
 
-```sh
+```bash
 gen_agg -i "e_slab_custom_frc.cam.h0.000*" -a LWCF SWCF TREFHT AEROD_v
 ```
 
@@ -132,15 +118,13 @@ This is not really part of the project, but kept here just for convenience.
 A file that in the CESM2 model is used in cycle mode on the year 1850 can be made into
 produce the same input to CESM2, but in "interp_missing_month" mode.
 
-Assuming you are in the directry of `c2imp.sh` and `set_date_var_nc.py`, and the file you
-want to change is `in.nc`, do
+Assuming you are in the directry of `c2imp.sh` and `set_date_var_nc.py`, and the file
+you want to change is `in.nc`, do
 
-```sh
+```bash
 sh c2imp.sh in.nc
 ```
 
 You probably also have to run the `ncks` command as specified in `c2imp.sh`.
 
 </details>
-
-[conda-stackoverflow]: https://stackoverflow.com/questions/63182614/python-packaging-creating-a-dependency-on-a-conda-forge-package-in-conda-m
