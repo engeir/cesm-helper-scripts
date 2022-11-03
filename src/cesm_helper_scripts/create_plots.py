@@ -20,27 +20,12 @@ import animatplot as amp
 import cftime
 import cosmoplots
 import matplotlib
-import matplotlib.animation as animation
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-
-try:
-    import cartopy.crs as ccrs
-
-    # from xmovie.presets import rotating_globe
-    from presets import static_globe
-    from xmovie import Movie
-except ImportError:
-    __CONDA__ = False
-    print(
-        "Cannot import cartopy and xmovie. "
-        + "Please install into a conda environment."
-    )
-else:
-    __CONDA__ = True
-
+from mpl_toolkits.basemap import Basemap
+from xmovie import Movie
 
 parser = argparse.ArgumentParser(
     description="Create plots and animations wrt. the attribute of a .nc file. \
@@ -69,6 +54,11 @@ parser.add_argument(
 parser.add_argument("-i", "--input", type=str, help="Input .nc file.")
 parser.add_argument("-o", "--output", help="Name of the output files.")
 parser.add_argument(
+    "--maps",
+    action="store_true",
+    help="Show URL to a list of available map projections.",
+)
+parser.add_argument(
     "-plt",
     "--plots",
     type=str,
@@ -77,6 +67,12 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+if args.maps:
+    print(
+        "Find all available map projections at "
+        + "https://matplotlib.org/basemap/api/basemap_api.html#module-mpl_toolkits.basemap"
+    )
+    sys.exit(0)
 # Correct the input argument
 if args.input is None:
     raise ValueError("you must give the input files")
@@ -114,7 +110,7 @@ savepath = f"{savepath}/" if savepath != "" and savepath[-1] != "/" else savepat
 # Check if output file exist
 
 
-def file_exist(end):
+def _file_exist(end):
     if os.path.exists(savepath + output + end):
         ans = str(
             input(
@@ -140,161 +136,77 @@ def file_exist(end):
 
 
 if "simple" in args.plots:
-    file_exist("_simple.png")
+    _file_exist("_simple.png")
 if "sphere" in args.plots:
-    file_exist("_sphere.png")
+    _file_exist("_sphere.png")
 if "anim" in args.plots:
-    file_exist(".mp4")
+    _file_exist(".mp4")
 
 # === <CODE> ===
 __FIG_STD__ = cosmoplots.set_rcparams_dynamo(matplotlib.rcParams)
 
 
-def spherical_plot(time_temp, time=0, save=""):
-    # projections: https://scitools.org.uk/cartopy/docs/latest/crs/projections.html
-    # PlateCarree(), Orthographic(-80, 35)
+def _latlon_over_time(
+    da: xr.DataArray, fig: plt.figure, time: int, *args, vmin=0, vmax=16, **kwargs
+):
     __FIG_STD__[2] = 0.7
-    fig = plt.figure()
-    ax = fig.add_axes(__FIG_STD__, projection=ccrs.PlateCarree())
-    if not save:
-        vmin = time_temp.isel(time=time).min().values
-        vmax = time_temp.isel(time=time).max().values
-    else:
-        vmin = time_temp.min().values
-        vmax = time_temp.max().values
-    _ = time_temp.isel(time=time).plot(
-        # subplot_kws=dict(projection=ccrs.Mollweide(), facecolor="gray"),
-        transform=ccrs.PlateCarree(),
-        vmin=vmin,
-        vmax=vmax,
-    )
-    ax.set_global()
-    ax.coastlines()
-    if not save:
-        plt.savefig(f"{savepath}{output}_sphere.png")
-    else:
+    # fig = plt.figure()
+    fig.subplots()
+    # ax = fig.add_axes(__FIG_STD__)
+    the_map = Basemap(projection="moll", lon_0=0, lat_0=0, resolution="l")
+    # the_map = Basemap(
+    #     lon_0=0,
+    #     llcrnrlon=-40,
+    #     llcrnrlat=-40,
+    #     urcrnrlon=40,
+    #     urcrnrlat=40,
+    #     resolution="l",
+    # )
+    the_map.drawcoastlines(linewidth=0.25)
+    the_map.drawmeridians(np.arange(0, 360, 30), linewidth=0.25)
+    the_map.drawparallels(np.arange(-90, 90, 30), linewidth=0.25)
+    x, y = np.meshgrid(da.isel(time=time).lon.data, da.isel(time=time).lat.data)
+    the_map.contourf(x, y, da.isel(time=time).data, latlon=True, vmin=vmin, vmax=vmax)
+    # plt.title(time)
+    # plt.colorbar()
+    return None, None
+
+
+def spherical_plot(da: xr.DataArray, ts: int, save="") -> None:
+    """Create an image of latxlon at a given time step."""
+    _latlon_over_time(da, fig := plt.figure(), ts)
+    if save:
         plt.savefig(save)
+    else:
+        plt.savefig(f"{savepath}{output}_sphere.png")
     fig.clear()
     plt.close()
 
 
-def anim(
-    dataset: xr.DataArray,
-) -> None:
+def xmov(da):
     """Show animation of Model output.
 
     Parameters
     ----------
-    dataset: xr.DataArray,
+    da: xr.DataArray,
         Model data
     """
-    fig = plt.figure()
-    ax = fig.add_axes(__FIG_STD__, projection=ccrs.PlateCarree())
-    # div = make_axes_locatable(ax)
-    # cax = div.append_axes("right", "5%", "5%")
-    vmax = np.nanmax(dataset.values)
-    vmin = np.nanmin(dataset.values)
-
-    frames = []
-
-    for timestep in dataset.time.values:
-        frame = dataset.sel(time=timestep).values
-        frames.append(frame)
-
-    cv0 = frames[0]
-    im = ax.imshow(
-        cv0,
-        origin="lower",
-        transform=ccrs.PlateCarree(),
-        norm=colors.LogNorm(vmin=vmin, vmax=vmax),
-    )
-    # fig.colorbar(im, cax=cax)
-    tx = ax.set_title("t = 0")
-
-    def animate(i: int) -> None:
-        arr = frames[i]
-        now = dataset.time.values[i]
-        im.set_data(arr)
-        im.set_clim(vmin, vmax)
-        tx.set_text(f"t = {now}")
-
-    ani = animation.FuncAnimation(
-        fig, animate, frames=dataset["time"].values.size, interval=1
-    )
-    ani.save(f"{savepath}{output}.mp4", writer="ffmpeg", fps=20)
-    plt.show()
-
-
-def xmov(signal):
-    vmin = signal.min().values
-    vmax = signal.max().values * 0.7
-    mov = Movie(signal, plotfunc=static_globe, style="dark", vmin=vmin, vmax=vmax)
+    vmin = da.min().values
+    vmax = da.max().values * 0.4
+    mov = Movie(da, _latlon_over_time, vmin=vmin, vmax=vmax)
     mov.save(
-        f"{savepath}{output}.gif",
+        f"{savepath}{output}.mp4",
         progress=True,
         overwrite_existing=True,
         remove_movie=False,
+        framerate=5,
     )
 
 
-def anim3(signal):
-    vmin = signal.min().values
-    vmax = signal.max().values * 0.7
-    fig = plt.figure()
-    __FIG_STD__[2] = 0.7
-    ax = fig.add_axes(__FIG_STD__, projection=ccrs.Robinson())
-    image = signal.isel(time=0).plot.imshow(
-        ax=ax,
-        transform=ccrs.PlateCarree(),
-        animated=True,
-        # vmin=vmin,
-        # vmax=vmax,
-        norm=colors.LogNorm(vmin=vmin, vmax=vmax),
-    )
-    ax.coastlines()
-
-    def update(t):
-        # Update the plot for a specific time
-        # print(t)
-        ax.set_title(f"time = {t}")
-        image.set_array(signal.sel(time=t))
-        return (image,)
-
-    # Run the animation, applying `update()` for each of the times in the variable
-    anim = animation.FuncAnimation(fig, update, frames=signal.time.values, blit=False)
-
-    # Save to file or display on screen
-    anim.save(f"{savepath}{output}.mp4", writer="ffmpeg", fps=20)
-    plt.show()
-
-
-def pure_python_anim(signal):
-    vmax = np.nanmax(signal.values)
-    vmin = np.nanmin(signal.values)
-    # fig = plt.figure()
-    # _ = fig.add_axes(__FIG_STD__)
-    # block = signal.plot.imshow(animate_over='time')
-    block = amp.blocks.Pcolormesh(
-        signal.lon,
-        signal.lat,
-        signal.values,
-        vmin=vmin,
-        vmax=vmax,
-        # norm=colors.LogNorm(vmin=vmin, vmax=vmax),
-    )
-    plt.colorbar(block.quad)
-    time_float = cftime.date2num(signal.time, "days since 0000-01-01") / 365
-    timeline = amp.Timeline(time_float, fps=10)
-    anim = amp.Animation([block], timeline)
-    anim.controls()
-    anim.save_gif(f"{savepath}{output}")
-    anim.save(f"{savepath}{output}.mp4")
-    plt.show()
-
-
-def height_anim(signal):
-    if "lev" not in signal.dims:
-        xmov(signal) if __CONDA__ else pure_python_anim(signal)
+def height_anim(da: xr.DataArray):
+    """Animate latitude versus height/pressure through time."""
+    if "lev" not in da.dims:
+        xmov(da)
         return
     # vmax = np.nanmax(signal.mean(dim="lon").values)
     # vmin = np.nanmin(signal.mean(dim="lon").values)
@@ -302,15 +214,15 @@ def height_anim(signal):
     vmin = 350
     plt.rcParams["image.cmap"] = "gist_ncar"
     block = amp.blocks.Pcolormesh(
-        signal.lat,
-        signal.lev,
-        signal.mean(dim="lon").values,
+        da.lat,
+        da.lev,
+        da.mean(dim="lon").values,
         # vmin=vmin,
         # vmax=vmax,
         norm=colors.LogNorm(vmin=vmin, vmax=vmax),
     )
     plt.colorbar(block.quad)
-    time_float = cftime.date2num(signal.time, "days since 0000-01-01") / 365
+    time_float = cftime.date2num(da.time, "days since 0000-01-01") / 365
     timeline = amp.Timeline(time_float, fps=10)
     anim = amp.Animation([block], timeline)
     anim.controls()
@@ -320,6 +232,7 @@ def height_anim(signal):
 
 
 def attr_vs_time(signal):
+    """Create a plot of the DataArray variable over time."""
     # Compensate for the different width of grid cells at different latitudes.
     # https://xarray.pydata.org/en/stable/examples/area_weighted_temperature.html
     # Need mean = ( sum n*cos(lat) ) / ( sum cos(lat) )
@@ -337,14 +250,14 @@ def attr_vs_time(signal):
 
 # === </CODE> ===
 def main():
+    """Run the main function."""
     multi = xr.open_dataarray(inputs)
     if "simple" in args.plots:
         attr_vs_time(multi)
     if "sphere" in args.plots:
-        spherical_plot(multi)
+        spherical_plot(multi, 46)
     if "anim" in args.plots:
-        # anim3(multi)
-        height_anim(multi)
+        xmov(multi[44:94])
 
 
 if __name__ == "__main__":

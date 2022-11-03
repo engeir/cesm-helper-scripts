@@ -4,12 +4,6 @@ repos:
 
 - repo: local
   hooks:
-  - id: update-conda-environment
-    name: Update .environment.yml
-    language: script
-    entry: .git/hooks/update-conda-env
-    pass_filenames: false
-
   - id: check-added-large-files
     name: Check for added large files
     stages: [commit]
