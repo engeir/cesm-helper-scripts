@@ -91,7 +91,7 @@ def file_exist(end):
         ans = str(
             input(
                 f"The file {output}{end} already exist in "
-                + f'"{savepath[:-1] if savepath != "" else "this directory"}". '
+                + f'{savepath[:-1] if savepath != "" else "this directory"}. '
                 + "Do you want to overwrite this? (y/n)\t"
             )
         )
