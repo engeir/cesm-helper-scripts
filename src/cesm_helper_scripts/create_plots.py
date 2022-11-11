@@ -51,7 +51,7 @@ parser.add_argument(
     + "input, the same path is used here as is for the path parameter. "
     + "If not given, the current directory is used.",
 )
-parser.add_argument("-i", "--input", type=str, help="Input .nc file.")
+parser.add_argument("-i", "--input", type=str, nargs="+", help="Input .nc file(s).")
 parser.add_argument("-o", "--output", help="Name of the output files.")
 parser.add_argument(
     "-m",
@@ -86,6 +86,13 @@ parser.add_argument(
     nargs=4,
     help="Latitude (low, high) and longitude (low, high).",
 )
+parser.add_argument(
+    "--vrange",
+    default=[None, None],
+    type=str,
+    nargs=2,
+    help="vmin and vmax, used when plotting three dimensions. Setting one to 'None' yields the default value of min and max.",
+)
 
 args = parser.parse_args()
 if args.maps:
@@ -114,21 +121,23 @@ if args.path is not None:
 else:
     path = ""
 # Combine the path with all files
-inputs = (
-    f"{path}{args.input}"
-    if args.input.split(".")[-1] == "nc"
-    else f"{path}{args.input}.nc"
-)
-if not glob.glob(inputs):
-    print(f"I could not find {inputs}")
-    print("Exiting...")
-    sys.exit()
+inputs = [
+    f"{path}{input_}" if input_.split(".")[-1] == "nc" else f"{path}{input_}.nc"
+    for input_ in args.input
+]
+for input_ in inputs:
+    if not glob.glob(input_):
+        print(f"I could not find {input_}")
+        print("Exiting...")
+        sys.exit()
 # Correct the savepath argument
 savepath = args.savepath if args.savepath is not None else ""
 savepath = path if savepath == "input" else savepath
 savepath = f"{savepath}/" if savepath != "" and savepath[-1] != "/" else savepath
 lat_1, lat_2, lon_1, lon_2 = args.latlon
 map_proj = args.map
+_VMIN = None if args.vrange[0] == "None" else float(args.vrange[0])
+_VMAX = None if args.vrange[1] == "None" else float(args.vrange[1])
 
 
 def _file_exist(end):
@@ -215,8 +224,8 @@ def xmov(da):
     da: xr.DataArray
         Model data
     """
-    vmin = da.min().values
-    vmax = da.max().values * 0.8
+    vmin = da.min().values if _VMIN is None else _VMIN
+    vmax = da.max().values * 0.8 if _VMAX is None else _VMAX
     mov = Movie(da.chunk({"time": 1}), _latlon_over_time, vmin=vmin, vmax=vmax)
     # FIXME: parallel gives several prompts
     mov.save(
@@ -236,17 +245,16 @@ def height_anim(da: xr.DataArray):
     if "lev" not in da.dims:
         xmov(da)
         return
-    # vmax = np.nanmax(signal.mean(dim="lon").values)
-    # vmin = np.nanmin(signal.mean(dim="lon").values)
-    vmax = 150
-    vmin = 350
+    vmin = np.nanmin(da.mean(dim="lon").values) if _VMIN is None else _VMIN
+    vmax = np.nanmax(da.mean(dim="lon").values) if _VMAX is None else _VMAX
     plt.rcParams["image.cmap"] = "gist_ncar"
+    # https://www.weather.gov/media/epz/wxcalc/pressureAltitude.pdf
+    # 1 mb = 1 hPa
+    hPa2alt = (1 - (da.lev / 1013.25) ** 0.190284) * 145366.45 * 0.3048
     block = amp.blocks.Pcolormesh(
         da.lat,
-        da.lev,
+        hPa2alt,
         da.mean(dim="lon").values,
-        # vmin=vmin,
-        # vmax=vmax,
         norm=colors.LogNorm(vmin=vmin, vmax=vmax),
     )
     plt.colorbar(block.quad)
@@ -256,30 +264,34 @@ def height_anim(da: xr.DataArray):
     anim.controls()
     anim.save_gif(f"{savepath}{output}")
     anim.save(f"{savepath}{output}.mp4")
-    plt.show()
 
 
-def attr_vs_time(signal):
+def attr_vs_time(da: xr.DataArray):
     """Create a plot of the DataArray variable over time."""
     # Compensate for the different width of grid cells at different latitudes.
     # https://xarray.pydata.org/en/stable/examples/area_weighted_temperature.html
     # Need mean = ( sum n*cos(lat) ) / ( sum cos(lat) )
     fig = plt.figure()
     _ = fig.add_axes(__FIG_STD__)
-    weights = np.cos(np.deg2rad(signal.lat))
+    weights = np.cos(np.deg2rad(da.lat))
     weights.name = "weights"
-    air_weighted = signal.weighted(weights)
+    air_weighted = da.weighted(weights)
     k_w = air_weighted.mean(("lon", "lat"))
     k_w.plot()
     plt.savefig(f"{savepath}{output}_simple.png")
-    plt.show()
     plt.close()
 
 
 # === </CODE> ===
 def main():
     """Run the main function."""
-    multi = xr.open_dataarray(inputs)
+    multi_ds = xr.open_mfdataset(inputs, chunks="auto")
+    # It is assumed that the first variable is the only variable, and as such, the right
+    # variable.
+    try:
+        multi = getattr(multi_ds, list(multi_ds.data_vars)[0])
+    except Exception as e:
+        raise e
     if args.slice is not None:
         try:
             multi = multi[
