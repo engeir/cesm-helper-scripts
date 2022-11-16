@@ -136,8 +136,8 @@ savepath = path if savepath == "input" else savepath
 savepath = f"{savepath}/" if savepath != "" and savepath[-1] != "/" else savepath
 lat_1, lat_2, lon_1, lon_2 = args.latlon
 map_proj = args.map
-_VMIN = None if args.vrange[0] == "None" else float(args.vrange[0])
-_VMAX = None if args.vrange[1] == "None" else float(args.vrange[1])
+_VMIN = None if str(args.vrange[0]) == "None" else float(args.vrange[0])
+_VMAX = None if str(args.vrange[1]) == "None" else float(args.vrange[1])
 
 
 def _file_exist(end):
@@ -232,7 +232,7 @@ def xmov(da):
         f"{savepath}{output}.mp4",
         progress=True,
         parallel=True,
-        parallel_compute_kwargs=dict(scheduler="processes", num_workers=8),
+        parallel_compute_kwargs=dict(scheduler="processes", num_workers=4),
         overwrite_existing=True,
         remove_movie=False,
         framerate=5,
