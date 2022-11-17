@@ -96,6 +96,12 @@ parser.add_argument(
     nargs=2,
     help="vmin and vmax, used when plotting three dimensions. Setting one to 'None' yields the default value of min and max.",
 )
+parser.add_argument(
+    "--framerate",
+    default=5,
+    type=int,
+    help="Frames per second for the output movie file. Only relevant for `.mp4` files.",
+)
 
 args = parser.parse_args()
 if args.maps:
@@ -141,6 +147,7 @@ lat_1, lat_2, lon_1, lon_2 = args.latlon
 map_proj = args.map
 _VMIN = None if str(args.vrange[0]) == "None" else float(args.vrange[0])
 _VMAX = None if str(args.vrange[1]) == "None" else float(args.vrange[1])
+_FRAMERATE = args.framerate
 
 
 def _file_exist(end):
@@ -238,7 +245,7 @@ def xmov(da):
         parallel_compute_kwargs=dict(scheduler="processes", num_workers=4),
         overwrite_existing=True,
         remove_movie=False,
-        framerate=5,
+        framerate=_FRAMERATE,
         # verbose=True,
     )
 
