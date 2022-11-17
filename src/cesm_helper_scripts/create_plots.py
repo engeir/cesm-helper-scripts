@@ -191,7 +191,7 @@ def _latlon_over_time(
     da: xr.DataArray, fig: plt.figure, time: int, *args, vmin=0, vmax=16, **kwargs
 ):
     __FIG_STD__[2] = 0.7
-    # fig = plt.figure()
+    matplotlib.rcParams["text.usetex"] = False
     fig.subplots()
     # ax = fig.add_axes(__FIG_STD__)
     # the_map = Basemap(projection="moll", lon_0=0, lat_0=0, resolution="l")
