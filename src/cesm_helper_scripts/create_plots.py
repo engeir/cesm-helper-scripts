@@ -69,6 +69,9 @@ parser.add_argument(
     "-y", "--yes", action="store_true", help="Answer yes to all questions."
 )
 parser.add_argument(
+    "--tex", default=False, action="store_true", help="Use tex/latex fonts."
+)
+parser.add_argument(
     "-plt",
     "--plots",
     type=str,
@@ -148,6 +151,7 @@ map_proj = args.map
 _VMIN = None if str(args.vrange[0]) == "None" else float(args.vrange[0])
 _VMAX = None if str(args.vrange[1]) == "None" else float(args.vrange[1])
 _FRAMERATE = args.framerate
+_TEX = args.tex
 
 
 def _file_exist(end):
@@ -191,7 +195,7 @@ def _latlon_over_time(
     da: xr.DataArray, fig: plt.figure, time: int, *args, vmin=0, vmax=16, **kwargs
 ):
     __FIG_STD__[2] = 0.7
-    matplotlib.rcParams["text.usetex"] = False
+    matplotlib.rcParams["text.usetex"] = _TEX
     fig.subplots()
     # ax = fig.add_axes(__FIG_STD__)
     # the_map = Basemap(projection="moll", lon_0=0, lat_0=0, resolution="l")
