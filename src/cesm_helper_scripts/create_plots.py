@@ -66,6 +66,9 @@ parser.add_argument(
     help="Show URL to a list of available map projections.",
 )
 parser.add_argument(
+    "-y", "--yes", action="store_true", help="Answer yes to all questions."
+)
+parser.add_argument(
     "-plt",
     "--plots",
     type=str,
@@ -143,27 +146,27 @@ _VMAX = None if str(args.vrange[1]) == "None" else float(args.vrange[1])
 def _file_exist(end):
     """Check if output file exist."""
     if os.path.exists(savepath + output + end):
-        ans = str(
-            input(
-                f"The file {output}{end} already exist in "
-                + f'{savepath[:-1] if savepath != "" else "this directory"}. '
-                + "Do you want to overwrite this? (y/n)\t"
+        if not args.yes:
+            ans = str(
+                input(
+                    f"The file {output}{end} already exist in "
+                    + f'{savepath[:-1] if savepath != "" else "this directory"}. '
+                    + "Do you want to overwrite this? (y/n)\t"
+                )
             )
-        )
-        if ans != "y":
-            print("Exiting without making any plots...")
-            sys.exit()
-        else:
-            print("Saving to", savepath + output + end)
+            if ans != "y":
+                print("Exiting without making any plots...")
+                sys.exit()
     else:
-        ans = str(input(f"Save to {savepath}{output}{end}? (y/n)\t"))
-        if ans != "y":
-            print("Exiting without making any plots...")
-            sys.exit()
-        else:
-            if savepath != "":
-                os.makedirs(savepath, exist_ok=True)
-            print("Saving to", savepath + output + end)
+        if not args.yes:
+            ans = str(input(f"Save to {savepath}{output}{end}? (y/n)\t"))
+            if ans != "y":
+                print("Exiting without making any plots...")
+                sys.exit()
+        if savepath != "":
+            os.makedirs(savepath, exist_ok=True)
+
+    print("Saving to", savepath + output + end)
 
 
 if "simple" in args.plots:
