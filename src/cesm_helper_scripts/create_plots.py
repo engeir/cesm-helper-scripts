@@ -200,8 +200,8 @@ def _latlon_over_time(
     the_map.drawparallels(np.arange(-90, 90, 30), linewidth=0.25)
     x, y = np.meshgrid(da.isel(time=time).lon.data, da.isel(time=time).lat.data)
     the_map.contourf(x, y, da.isel(time=time).data, latlon=True, vmin=vmin, vmax=vmax)
-    # plt.title(time)
-    # plt.colorbar()
+    plt.title(da.time.data[time])
+    plt.colorbar()
     return None, None
 
 
