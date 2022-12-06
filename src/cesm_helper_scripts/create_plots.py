@@ -271,7 +271,12 @@ def height_anim(da: xr.DataArray):
         da.mean(dim="lon").values,
         norm=colors.LogNorm(vmin=vmin, vmax=vmax),
     )
-    plt.colorbar(block.quad)
+    plt.colorbar(block.quad, pad=0.2)
+    plt.ylabel("Meters")
+    ax2 = plt.gca().twinx()
+    ax2.set_ylim(da.lev.max(), da.lev.min())
+    ax2.set_ylabel("hPa")
+    plt.tight_layout()
     time_float = cftime.date2num(da.time, "days since 0000-01-01") / 365
     timeline = amp.Timeline(time_float, fps=10)
     anim = amp.Animation([block], timeline)
