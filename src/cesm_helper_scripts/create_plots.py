@@ -262,19 +262,20 @@ def height_anim(da: xr.DataArray):
     vmin = np.nanmin(da.mean(dim="lon").values) if _VMIN is None else _VMIN
     vmax = np.nanmax(da.mean(dim="lon").values) if _VMAX is None else _VMAX
     plt.rcParams["image.cmap"] = "gist_ncar"
-    # https://www.weather.gov/media/epz/wxcalc/pressureAltitude.pdf
-    # 1 mb = 1 hPa
-    hPa2alt = (1 - (da.lev / 1013.25) ** 0.190284) * 145366.45 * 0.3048
+    # Empirically estimated based on the below, where 1000 hPa ~ 0 km, 1e-2 ~ 80 km:
+    # https://www.cesm.ucar.edu/working_groups/Atmosphere/dycore-res/vertical-phase-1.html
+    hPa2km = 80 / 5 * (3 - np.log10(da.lev))
     block = amp.blocks.Pcolormesh(
         da.lat,
-        hPa2alt,
+        hPa2km,
         da.mean(dim="lon").values,
         norm=colors.LogNorm(vmin=vmin, vmax=vmax),
     )
     plt.colorbar(block.quad, pad=0.2)
-    plt.ylabel("Meters")
+    plt.ylabel("km")
     ax2 = plt.gca().twinx()
     ax2.set_ylim(da.lev.max(), da.lev.min())
+    ax2.set_yscale("log")
     ax2.set_ylabel("hPa")
     plt.tight_layout()
     time_float = cftime.date2num(da.time, "days since 0000-01-01") / 365
