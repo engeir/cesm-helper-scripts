@@ -221,7 +221,8 @@ def _latlon_over_time(
 
 def spherical_plot(da: xr.DataArray, ts: int, save="") -> None:
     """Create an image of latxlon at a given time step."""
-    _latlon_over_time(da, fig := plt.figure(), ts)
+    fig = plt.figure()
+    _latlon_over_time(da, fig, ts)
     if save:
         plt.savefig(save)
     else:
