@@ -95,6 +95,24 @@ else:
             print(f"I could not find {input_}")
             sys.exit("Exiting...")
 
+
+def _attr_present(attr) -> bool:
+    # If the_input is a list, choose the first, otherwise glob expand and then choose
+    # the first.
+    if isinstance(the_input, str):
+        check_input = glob.glob(the_input)[0]
+    elif isinstance(the_input, list):
+        check_input = the_input[0]
+    ds = xr.open_mfdataset(check_input)
+    try:
+        _ = getattr(ds, attr)
+    except AttributeError as e:
+        print(e)
+        return False
+    else:
+        return True
+
+
 # Correct the savepath argument
 savepath = args.savepath if args.savepath is not None else ""
 savepath = path if savepath == "input" else savepath
@@ -108,7 +126,7 @@ for a in args.attributes:
             f"Seems like a file with the name {op} already exist.",
             "Come back tomorrow, or give a custom name using the '-o' option.",
         )
-    else:
+    elif _attr_present(a):
         if savepath != "":
             os.makedirs(savepath, exist_ok=True)
         print("Saving to", savepath + op)
