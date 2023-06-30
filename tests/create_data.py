@@ -10,7 +10,6 @@ import numpy as np
 
 class Dataset:
     def __init__(self) -> None:
-        self.clean()
         if (
             here := os.path.basename(abs_path := os.path.abspath("."))
         ) == "cesm-helper-scripts":
@@ -23,13 +22,14 @@ class Dataset:
                 f" but could only find absolute path {abs_path}, and that ends in the"
                 f" {here} directory."
             )
+        self.clean()
         self.format: Literal[
             "NETCDF3_CLASSIC",
             "NETCDF4",
             "NETCDF4_CLASSIC",
             "NETCDF3_64BIT_OFFSET",
             "NETCDF3_64BIT_DATA",
-        ] = "NETCDF4"
+        ] = "NETCDF3_64BIT_OFFSET"
         self.num_files = 10
 
     def set_variables(self) -> None:
@@ -69,7 +69,7 @@ class Dataset:
                 "dims": ("time", "lat", "lon"),
                 "type": "f4",
                 "_FillValue": 1e36,
-                "missing_value": 1e36,
+                # "missing_value": 1e36,
                 "long_name": "Stratospheric aerosol optical depth 550 nm, day night",
                 "cell_methods": "time: mean",
             },
@@ -77,16 +77,18 @@ class Dataset:
 
     def clean(self) -> None:
         """Clean up the data directory for generated data sets."""
-        shutil.rmtree(self.path)
+        if os.path.exists(self.path):
+            shutil.rmtree(self.path)
+        os.makedirs(self.path)
 
     def make_datasets(self) -> None:
         for i in range(self.num_files):
             i_ = "0" * (2 - len(str(i))) + str(i)
             file_name = f"simulation.cam.h0.1852-{i_}.nc"
             self.set_variables()
-            self.create_dataset(file_name)
+            self.create_dataset(file_name, i * 30)
 
-    def create_dataset(self, file_name: str) -> None:
+    def create_dataset(self, file_name: str, time_stamp: int) -> None:
         ds = netCDF4.Dataset(
             os.path.join(self.path, file_name), mode="w", format=self.format
         )
@@ -111,9 +113,9 @@ class Dataset:
         ds.createDimension("lon", 144)  # longitude axis
         ds.createDimension("lev", 32)  # level axis
         ds.createDimension("ilev", 33)  # interfaces levels
-        _ = ds.createDimension("chars", 8)  # KeyError: No variable information
-        _ = ds.createDimension("nbnd", 2)  # KeyError: No variable information
-        _ = ds.createDimension("time", 1)  # unlimited axis (can be appended to).
+        ds.createDimension("chars", 8)  # KeyError: No variable information
+        ds.createDimension("nbnd", 2)  # KeyError: No variable information
+        ds.createDimension("time")  # unlimited axis (can be appended to).
         lat = ds.createVariable("lat", "f8", ("lat",), fill_value=-900)
         lat.units = "degrees_north"
         lat.long_name = "latitude"
@@ -141,8 +143,13 @@ class Dataset:
         nlats = ds.dimensions["lat"].size
         nlons = ds.dimensions["lon"].size
         nlevs = ds.dimensions["lev"].size
-        # nlilevs = ds.dimensions["ilev"].size
-        ntimes = ds.dimensions["time"].size
+        # Populate variables with data
+        ds.variables["lat"]
+        ds.variables["lon"]
+        time_ = ds.variables["time"]
+        time_[:] = time_stamp  # Days since 1850
+        lat[:] = -90.0 + (180.0 / nlats) * np.arange(nlats)
+        lon[:] = (180.0 / nlats) * np.arange(nlons)  # Greenwich meridian eastward
         for var_name, var_dict in self.variables.items():
             if "_FillValue" in var_dict:
                 dims_length = len(dims_ := var_dict.pop("dims"))
@@ -157,26 +164,15 @@ class Dataset:
                 var = ds.createVariable(var_name, var_dict.pop("type"), dims_)
             for meta in var_dict.items():
                 setattr(var, meta[0], meta[1])
-            # Populate variables with data
-            lat = ds.variables["lat"]
-            lon = ds.variables["lon"]
-            lat[:] = [
-                i * 10 - 90 for i in range(nlats)
-            ]  # -90.0 + (180.0 / nlats) * np.arange(nlats)  # south pole to north pole
-            lon[:] = [
-                180.0 / nlats * i for i in range(nlons)
-            ]  # (180.0 / nlats) * np.arange(nlons)  # Greenwich meridian eastward
-            data_arr = [
-                [list(range(nlons)) for _ in range(nlats)] for _ in range(ntimes)
-            ]
-            data_slice = [
-                list(range(nlons)) for _ in range(nlats)
-            ]  # np.random.uniform(low=280, high=330, size=(nlats, nlons))
+            data_slice = np.random.uniform(low=280, high=330, size=(nlats, nlons))
+            data_slice = data_slice[np.newaxis, :]
             if dims_length == 3:
-                var[0, :, :] = np.asarray(data_arr) * (np.random.randint(0, 2) * 2 - 1)
+                var[:, :, :] = np.asarray(data_slice) * (
+                    np.random.randint(0, 2) * 2 - 1
+                )
             elif dims_length == 4:
                 for levs in range(nlevs):
-                    var[0, levs, :, :] = np.asarray(data_slice) * levs
+                    var[:, levs, :, :] = np.asarray(data_slice) * levs
 
 
 def main():
