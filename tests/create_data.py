@@ -106,13 +106,11 @@ class Dataset:
             " am just making sure the line is long enough to get some wrapping."
         )
         ds.title = ""
-        ds.description = "Example dataset"
-        ds.creator = "\n"
         ds.time_period_freq = "month_1"
         ds.createDimension("lat", 96)  # latitude axis
         ds.createDimension("lon", 144)  # longitude axis
-        ds.createDimension("lev", 32)  # level axis
-        ds.createDimension("ilev", 33)  # interfaces levels
+        ds.createDimension("lev", 70)  # level axis
+        ds.createDimension("ilev", 71)  # interfaces levels
         ds.createDimension("chars", 8)  # KeyError: No variable information
         ds.createDimension("nbnd", 2)  # KeyError: No variable information
         ds.createDimension("time")  # unlimited axis (can be appended to).
@@ -143,6 +141,7 @@ class Dataset:
         nlats = ds.dimensions["lat"].size
         nlons = ds.dimensions["lon"].size
         nlevs = ds.dimensions["lev"].size
+        # nilevs = ds.dimensions["ilev"].size
         # Populate variables with data
         ds.variables["lat"]
         ds.variables["lon"]
@@ -150,6 +149,43 @@ class Dataset:
         time_[:] = time_stamp  # Days since 1850
         lat[:] = -90.0 + (180.0 / nlats) * np.arange(nlats)
         lon[:] = (180.0 / nlats) * np.arange(nlons)  # Greenwich meridian eastward
+        # lev[:] = np.arange(nlevs)  # From 5.96e-06 to 992.6 hPa
+        # ilev[:] = np.arange(nilevs)  # From  4.5e-06 to 1000 hPa
+        # fmt: off
+        ilev[:] = [
+            4.500500e-06, 7.420100e-06, 1.223370e-05, 2.017000e-05, 3.325450e-05,
+            5.482750e-05, 9.039800e-05, 1.490400e-04, 2.457200e-04, 4.051250e-04,
+            6.679400e-04, 1.101265e-03, 1.815650e-03, 2.993500e-03, 4.963000e-03,
+            8.150651e-03, 1.347700e-02, 2.231900e-02, 3.679650e-02, 6.066500e-02,
+            9.915650e-02, 1.573900e-01, 2.388500e-01, 3.452000e-01, 4.751350e-01,
+            6.318050e-01, 8.291550e-01, 1.082740e+00, 1.406850e+00, 1.818850e+00,
+            2.339800e+00, 2.995050e+00, 3.814700e+00, 4.834450e+00, 6.096350e+00,
+            7.649350e+00, 9.550100e+00, 1.186400e+01, 1.466550e+01, 1.803800e+01,
+            2.207550e+01, 2.688250e+01, 3.257350e+01, 3.927300e+01, 4.711450e+01,
+            5.624050e+01, 6.680050e+01, 8.070142e+01, 9.494104e+01, 1.116932e+02,
+            1.314013e+02, 1.545868e+02, 1.818634e+02, 2.139528e+02, 2.517044e+02,
+            2.961172e+02, 3.483666e+02, 4.098352e+02, 4.821499e+02, 5.672244e+02,
+            6.523330e+02, 7.304459e+02, 7.963631e+02, 8.453537e+02, 8.737159e+02,
+            9.003246e+02, 9.249645e+02, 9.474323e+02, 9.675386e+02, 9.851122e+02,
+            1.000000e+03,
+        ]
+        lev[:] = [
+            5.960300e-06, 9.826900e-06, 1.620185e-05, 2.671225e-05, 4.404100e-05,
+            7.261275e-05, 1.197190e-04, 1.973800e-04, 3.254225e-04, 5.365325e-04,
+            8.846025e-04, 1.458457e-03, 2.404575e-03, 3.978250e-03, 6.556826e-03,
+            1.081383e-02, 1.789800e-02, 2.955775e-02, 4.873075e-02, 7.991075e-02,
+            1.282732e-01, 1.981200e-01, 2.920250e-01, 4.101675e-01, 5.534700e-01,
+            7.304800e-01, 9.559475e-01, 1.244795e+00, 1.612850e+00, 2.079325e+00,
+            2.667425e+00, 3.404875e+00, 4.324575e+00, 5.465400e+00, 6.872850e+00,
+            8.599725e+00, 1.070705e+01, 1.326475e+01, 1.635175e+01, 2.005675e+01,
+            2.447900e+01, 2.972800e+01, 3.592325e+01, 4.319375e+01, 5.167750e+01,
+            6.152050e+01, 7.375096e+01, 8.782123e+01, 1.033171e+02, 1.215472e+02,
+            1.429940e+02, 1.682251e+02, 1.979081e+02, 2.328286e+02, 2.739108e+02,
+            3.222419e+02, 3.791009e+02, 4.459926e+02, 5.246872e+02, 6.097787e+02,
+            6.913894e+02, 7.634045e+02, 8.208584e+02, 8.595348e+02, 8.870202e+02,
+            9.126445e+02, 9.361984e+02, 9.574855e+02, 9.763254e+02, 9.925561e+02
+        ]
+        # fmt: on
         for var_name, var_dict in self.variables.items():
             if "_FillValue" in var_dict:
                 dims_length = len(dims_ := var_dict.pop("dims"))

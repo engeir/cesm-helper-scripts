@@ -4,6 +4,7 @@ import os
 import subprocess
 
 import create_data as cd
+import numpy as np
 
 
 class RunGenAgg:
@@ -26,29 +27,44 @@ class RunGenAgg:
     def get_file_list(self) -> list[str]:
         return os.listdir(self.data_path)
 
-    def simulate(self) -> None:
-        return_code = subprocess.call(
-            [
-                "python",
-                self.script,
-                "-a",
-                "FLNT",
-                "-p",
-                self.data_path,
-                "-i",
-                # "simulation.cam*",
-                *self.get_file_list(),
-            ]
-        )
-        if not return_code:
-            print("Success")
+    def simulate(self, splits: int = 1) -> None:
+        """Simulate generation of aggregated variables.
+
+        Parameters
+        ----------
+        splits : int
+            Specify the number of files the aggregated data should be split into.
+        """
+        data = self.get_file_list()
+        data.sort()
+        steps = int(np.ceil(len(data) / splits))
+        file_list: list[list[str]] = [
+            data[x : x + steps] for x in range(0, len(data), steps)
+        ]
+        for i, chunk in enumerate(file_list):
+            if return_code := subprocess.call(
+                [
+                    "python",
+                    self.script,
+                    "-a",
+                    "FLNT",
+                    "-p",
+                    self.data_path,
+                    "-i",
+                    # "simulation.cam*",
+                    *chunk,
+                    "-o",
+                    f"FLNT_{i}",
+                ]
+            ):
+                print(f"Return code: {return_code}")
 
 
 def main() -> None:
     cd.main()
     s = RunGenAgg()
     s.get_file_list()
-    s.simulate()
+    s.simulate(3)
 
 
 if __name__ == "__main__":
