@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import time
 
 import create_data as cd
 import numpy as np
@@ -51,7 +52,6 @@ class RunGenAgg:
                     "-p",
                     self.data_path,
                     "-i",
-                    # "simulation.cam*",
                     *chunk,
                     "-o",
                     f"FLNT_{i}",
@@ -61,10 +61,17 @@ class RunGenAgg:
 
 
 def main() -> None:
-    cd.main()
-    s = RunGenAgg()
-    s.get_file_list()
-    s.simulate(3)
+    creator = cd.Dataset()
+    file_format = creator.file_format_list.copy()
+    while file_format:
+        file_format_ = file_format.pop()
+        print(file_format_)
+        creator.clean()
+        creator.make_datasets(file_format_)
+        s = RunGenAgg()
+        s.simulate(3)
+        print(f"Success! {file_format_} files works.")
+        time.sleep(1.5)
 
 
 if __name__ == "__main__":

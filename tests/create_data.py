@@ -2,10 +2,18 @@
 
 import os
 import shutil
-from typing import Literal
+from typing import Literal, Optional
 
 import netCDF4
 import numpy as np
+
+FileFormat = Literal[
+    "NETCDF3_CLASSIC",
+    "NETCDF4",
+    "NETCDF4_CLASSIC",
+    "NETCDF3_64BIT_OFFSET",
+    "NETCDF3_64BIT_DATA",
+]
 
 
 class Dataset:
@@ -23,13 +31,14 @@ class Dataset:
                 f" {here} directory."
             )
         self.clean()
-        self.format: Literal[
+        self.file_format_list: list[FileFormat] = [
             "NETCDF3_CLASSIC",
             "NETCDF4",
             "NETCDF4_CLASSIC",
             "NETCDF3_64BIT_OFFSET",
             "NETCDF3_64BIT_DATA",
-        ] = "NETCDF3_64BIT_OFFSET"
+        ]
+        self.format: FileFormat = "NETCDF4_CLASSIC"
         self.num_files = 10
 
     def set_variables(self) -> None:
@@ -81,16 +90,19 @@ class Dataset:
             shutil.rmtree(self.path)
         os.makedirs(self.path)
 
-    def make_datasets(self) -> None:
+    def make_datasets(self, format: Optional[FileFormat] = None) -> None:
+        self.format = format or self.format
         for i in range(self.num_files):
             i_ = "0" * (2 - len(str(i))) + str(i)
             file_name = f"simulation.cam.h0.1852-{i_}.nc"
             self.set_variables()
-            self.create_dataset(file_name, i * 30)
+            self.create_dataset(file_name, i * 30, self.format)
 
-    def create_dataset(self, file_name: str, time_stamp: int) -> None:
+    def create_dataset(
+        self, file_name: str, time_stamp: int, format: FileFormat
+    ) -> None:
         ds = netCDF4.Dataset(
-            os.path.join(self.path, file_name), mode="w", format=self.format
+            os.path.join(self.path, file_name), mode="w", format=format
         )
         ds.description = "Example description"
         ds.creator = (
@@ -141,7 +153,6 @@ class Dataset:
         nlats = ds.dimensions["lat"].size
         nlons = ds.dimensions["lon"].size
         nlevs = ds.dimensions["lev"].size
-        # nilevs = ds.dimensions["ilev"].size
         # Populate variables with data
         ds.variables["lat"]
         ds.variables["lon"]
@@ -149,8 +160,6 @@ class Dataset:
         time_[:] = time_stamp  # Days since 1850
         lat[:] = -90.0 + (180.0 / nlats) * np.arange(nlats)
         lon[:] = (180.0 / nlats) * np.arange(nlons)  # Greenwich meridian eastward
-        # lev[:] = np.arange(nlevs)  # From 5.96e-06 to 992.6 hPa
-        # ilev[:] = np.arange(nilevs)  # From  4.5e-06 to 1000 hPa
         # fmt: off
         ilev[:] = [
             4.500500e-06, 7.420100e-06, 1.223370e-05, 2.017000e-05, 3.325450e-05,
@@ -209,6 +218,7 @@ class Dataset:
             elif dims_length == 4:
                 for levs in range(nlevs):
                     var[:, levs, :, :] = np.asarray(data_slice) * levs
+        ds.close()
 
 
 def main():
