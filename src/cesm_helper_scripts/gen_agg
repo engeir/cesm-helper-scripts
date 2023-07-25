@@ -64,11 +64,12 @@ parser.add_argument(
 
 args = parser.parse_args()
 if args.append_to != "":
-    sys.exit(
+    print(
         "Sorry, but an appending method will not be implemented in the near future."
         " Instead you can use the ncrcat function from the NCO family"
         " (http://nco.sf.net/nco.html#ncrcat)."
     )
+    sys.exit()
 # Correct the input argument
 if args.input is None:
     raise ValueError("you must give the input files")
