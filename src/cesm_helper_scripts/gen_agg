@@ -117,7 +117,7 @@ def _attr_present(attr) -> bool:
         check_input = glob.glob(the_input)[0]
     elif isinstance(the_input, list):
         check_input = the_input[0]
-    ds = xr.open_mfdataset(check_input)
+    ds = xr.open_mfdataset(check_input, lock=False)
     try:
         _ = getattr(ds, attr)
     except AttributeError as e:
@@ -151,7 +151,8 @@ if not attrs:
     sys.exit("All attributes files already exist. Exiting...")
 
 print("Creating aggregated dataset... ", end="", flush=True)
-dataset = xr.open_mfdataset(the_input)
+# See issue https://github.com/pydata/xarray/issues/3961
+dataset = xr.open_mfdataset(the_input, lock=False)
 dataset = xr.decode_cf(dataset)
 print("Finished creating aggregated dataset.")
 for i, a in enumerate(attrs):
