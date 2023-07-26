@@ -12,7 +12,7 @@ remove-seasonal = "cesm_helper_scripts.remove_seasonal:remove_seasonal"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
-rich = "^10.1.0"
+rich = "^13.4.2"
 matplotlib = "^3.4.1"
 dask = "^2023.5.0"
 nc-time-axis = "^1.2.0"
