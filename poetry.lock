@@ -300,13 +300,13 @@ test-no-images = ["pytest", "pytest-cov", "wurlitzer"]
 
 [[package]]
 name = "cosmoplots"
-version = "0.1.6"
+version = "0.2.0"
 description = "Routines to get a sane default configuration for production quality plots."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "cosmoplots-0.1.6-py3-none-any.whl", hash = "sha256:5a33c05debf309e9e6655567a3bda3ba4a3e5fa42cf38744bb6b61698b4f5055"},
-    {file = "cosmoplots-0.1.6.tar.gz", hash = "sha256:d666b33ad275c915e8e8824f02cd5e8a1f70d39096e6445c1b8a8fadb221e9e4"},
+    {file = "cosmoplots-0.2.0-py3-none-any.whl", hash = "sha256:5246637ff296316c2483782c20adcdd59e83fdca91577890a798c268ff96652e"},
+    {file = "cosmoplots-0.2.0.tar.gz", hash = "sha256:dedcf5fc81ed8e953be5b25ecfeadd1995bb0285dc94553c063c12d272d276d9"},
 ]
 
 [package.dependencies]
@@ -1710,4 +1710,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.12"
-content-hash = "628dd530c1284b0170a20bbd74be93166699190c82f361d4ad1d4c4a29cef500"
+content-hash = "555b26507677e6938c85402788847e3a2908063360cbc4858157d8bc54f4b1ba"
