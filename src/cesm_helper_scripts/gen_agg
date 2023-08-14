@@ -108,7 +108,8 @@ else:
     for input_ in the_input:
         if not glob.glob(input_):
             print(f"I could not find {input_}")
-            sys.exit("Exiting...")
+            print("Exiting...")
+            sys.exit()
 
 
 def _attr_present(attr) -> bool:
@@ -149,7 +150,8 @@ for a in args.attributes:
         print("Saving to", savepath + op)
         attrs.append(a)
 if not attrs:
-    sys.exit("All attributes files already exist. Exiting...")
+    print("All attributes files already exist. Exiting...")
+    sys.exit()
 
 print("Creating aggregated dataset... ", end="", flush=True)
 # See issue https://github.com/pydata/xarray/issues/3961
