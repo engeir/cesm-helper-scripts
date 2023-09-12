@@ -148,15 +148,14 @@ def nc_to_np(temps: xr.Dataset):
 
 def main():
     """Run the main function for the script."""
-    array_ds = xr.open_mfdataset(inputs)
+    array_ds = xr.open_mfdataset(inputs, chunks="auto", drop_variables="time_bnds")
     attr_list = list(array_ds.data_vars)
-    if "time_bnds" in attr_list:
-        attr_list.remove("time_bnds")
     if len(attr_list) != 1:
         raise ValueError(
             "The input file must contain only one variable. " + f"Found {attr_list}"
         )
     array = getattr(array_ds, attr_list[0]).assign_attrs(array_ds.attrs)
+    array_ds.close()
     nc_to_np(array)
 
 
