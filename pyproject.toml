@@ -1,43 +1,40 @@
-[tool.poetry]
+[project]
 name = "cesm-helper-scripts"
 version = "0.5.4"
 description = ""
-authors = ["engeir <eirroleng@gmail.com>"]
-license = "MIT"
+authors = [{ name = "engeir", email = "engeir@pm.me" }]
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+dependencies = [
+  "rich",
+  "matplotlib",
+  "dask",
+  "nc-time-axis",
+  "cftime",
+  "animatplot",
+  "cosmoplots",
+  "tqdm",
+  "xarray",
+  "h5netcdf",
+  "basemap",
+  "xmovie",
+  "numpy",
+  "netcdf4",
+]
 
-[tool.poetry.scripts]
+[project.scripts]
 cplt = "cesm_helper_scripts.create_plots:main"
 nc2np = "cesm_helper_scripts.nc_to_np:main"
 remove-seasonal = "cesm_helper_scripts.remove_seasonal:remove_seasonal"
 
-[tool.poetry.dependencies]
-python = ">=3.8,<3.12"
-rich = "^13.5.2"
-matplotlib = "^3.4.1"
-dask = "^2023.5.0"
-nc-time-axis = "^1.2.0"
-cftime = "^1.5.0"
-animatplot = "^0.4.2"
-cosmoplots = "^0.3.0"
-tqdm = "^4.66.1"
-xarray = "^2023.1.0"
-h5netcdf = "^1.0.2"
-importlib-metadata = "^6.8.0"
-basemap = "^1.4.0"
-xmovie = "^0.3.1"
-numpy = "^1.23.4"
-netcdf4 = "^1.6.2"
-
-[tool.poetry.dev-dependencies]
-isort = "^5.8.0"
-pre-commit = "^3.5.0"
-darglint = "^1.8.0"
-pyupgrade = "^3.8.0"
-flake8 = "^5.0.4"
-pre-commit-hooks = "^4.4.0"
-pytest = "^7.4.4"
-black = "^23.12.1"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv]
+dev-dependencies = [
+  "isort>=5.13.2",
+  "pre-commit>=3.8.0",
+  "darglint>=1.8.1",
+  "pyupgrade>=3.17.0",
+  "flake8>=7.1.1",
+  "pre-commit-hooks>=4.6.0",
+  "pytest>=8.3.2",
+  "black>=24.8.0",
+]
